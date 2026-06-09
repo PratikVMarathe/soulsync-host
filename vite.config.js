@@ -1,4 +1,5 @@
 import process from 'node:process';
+import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import federation from '@originjs/vite-plugin-federation';
 import { defineConfig, loadEnv } from 'vite';
@@ -25,6 +26,7 @@ export default defineConfig(({ mode }) => {
   const authPopupHeaders = {
     'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
   };
+  const workspaceRoot = path.resolve(process.cwd(), '..');
 
   return {
     plugins: [
@@ -32,12 +34,16 @@ export default defineConfig(({ mode }) => {
       federation({
         name: 'hostApp',
         remotes: {
+          adminApp: requireEnv(env, 'VITE_ADMIN_REMOTE_URL'),
           quizApp: requireEnv(env, 'VITE_QUIZ_REMOTE_URL'),
         },
-        shared: ['react', 'react-dom'],
+        shared: ['react', 'react-dom', 'react-router', 'react-router-dom'],
       }),
     ],
     server: {
+      fs: {
+        allow: [workspaceRoot],
+      },
       headers: authPopupHeaders,
       port: devPort,
       strictPort: true,
