@@ -3,12 +3,12 @@ import AppIcon from './AppIcon';
 import Brand from './Brand';
 
 const navigationItems = [
-  { key: 'home', label: 'Home', icon: 'home', section: 'dashboard-top' },
-  { key: 'learn', label: 'Learn', icon: 'book', section: 'continue-learning' },
-  { key: 'quiz', label: 'Quiz', icon: 'question', section: 'active-challenges' },
-  { key: 'guide', label: 'AI Guide', icon: 'message', section: 'ai-guide-panel' },
-  { key: 'bookmarks', label: 'Bookmarks', icon: 'bookmark', section: 'continue-learning' },
-  { key: 'progress', label: 'Progress', icon: 'levels', section: 'progress-overview' },
+  { key: 'home', label: 'Home', icon: 'home', route: '/', section: 'dashboard-top' },
+  { key: 'learn', label: 'Learn', icon: 'book', route: '/', section: 'continue-learning' },
+  { key: 'quiz', label: 'Quiz', icon: 'question', route: '/quiz' },
+  { key: 'guide', label: 'AI Guide', icon: 'message', route: '/', section: 'ai-guide-panel' },
+  // { key: 'bookmarks', label: 'Bookmarks', icon: 'bookmark', route: '/', section: 'continue-learning' },
+  { key: 'progress', label: 'Progress', icon: 'levels', route: '/', section: 'progress-overview' },
 ];
 
 const mobileItems = [
@@ -16,7 +16,7 @@ const mobileItems = [
   navigationItems[1],
   navigationItems[2],
   navigationItems[3],
-  { key: 'profile', label: 'Profile', icon: 'profile', section: 'profile-anchor' },
+  { key: 'profile', label: 'Profile', icon: 'profile', route: '/profile' },
 ];
 
 function getInitials(user) {
@@ -35,7 +35,11 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
   const navigate = useNavigate();
   const initials = getInitials(user);
 
-  const activeKey = location.pathname.startsWith('/quiz/') ? 'quiz' : 'home';
+  const activeKey = location.pathname.startsWith('/profile')
+    ? 'profile'
+    : location.pathname.startsWith('/quiz')
+      ? 'quiz'
+      : 'home';
 
   const scrollToSection = (section) => {
     if (section === 'dashboard-top') {
@@ -50,6 +54,11 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
   };
 
   const handleNavigate = (item) => {
+    if (item.route && item.route !== '/') {
+      navigate(item.route);
+      return;
+    }
+
     if (location.pathname === '/' && item.section) {
       scrollToSection(item.section);
       return;
@@ -59,7 +68,7 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
       window.sessionStorage.setItem('soulsync-scroll-target', item.section);
     }
 
-    navigate('/');
+    navigate(item.route || '/');
   };
 
   const handleBlurCapture = (event) => {
@@ -108,7 +117,7 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
 
           <button
             className="app-sidebar-profile"
-            onClick={() => handleNavigate({ section: 'profile-anchor' })}
+            onClick={() => handleNavigate({ route: '/profile' })}
             type="button"
           >
             <span className="app-sidebar-avatar">{initials}</span>

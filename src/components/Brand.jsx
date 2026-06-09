@@ -12,7 +12,12 @@ export default function Brand({ compact = false, iconOnly = false, textOnly = fa
           />
         </span>
       )}
-      {!iconOnly && <span className="brand-mark-text">SoulSync</span>}
+      {!iconOnly && (
+        <span className="brand-mark-text">
+          <span className="brand-mark-soul">Soul</span>
+          <span className="brand-mark-sync">Sync</span>
+        </span>
+      )}
     </Link>
   );
 }

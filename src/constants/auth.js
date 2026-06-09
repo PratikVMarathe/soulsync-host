@@ -1,0 +1,36 @@
+export const USER_ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  USER: 'USER',
+};
+
+export const USER_STATUSES = {
+  ACTIVE: 'ACTIVE',
+  BLOCKED: 'BLOCKED',
+  SOFT_DELETED: 'SOFT_DELETED',
+};
+
+export const ADMIN_INVITE_STATUSES = {
+  PENDING: 'PENDING',
+  ACCEPTED: 'ACCEPTED',
+  CANCELLED: 'CANCELLED',
+};
+
+export const IDENTITY_LOCK_STATUSES = {
+  LOCKED: 'LOCKED',
+  RELEASED: 'RELEASED',
+};
+
+export const IDENTITY_TYPES = {
+  EMAIL: 'EMAIL',
+  PHONE: 'PHONE',
+};
+
+export const ALL_APP_ROLES = Object.values(USER_ROLES);
+
+export const ADMIN_ROLES = [
+  USER_ROLES.SUPER_ADMIN,
+  USER_ROLES.ADMIN,
+];
+
+export const ACTIVE_QUIZ_STATUSES = ['ACTIVE', 'Active'];

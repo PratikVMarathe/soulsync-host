@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { formatLevelLabel } from '../utils/identity';
 import AppIcon from './AppIcon';
 
 const themeMap = {
@@ -16,11 +17,14 @@ export default function ChallengeCard({ quiz }) {
   const navigate = useNavigate();
   const themeClass = themeMap[quiz?.slug] || themeMap[quiz?.category] || 'is-forest';
   const questionCount = quiz?.questions?.length || 0;
+  const timeLabel = quiz?.timeLimitLabel
+    || quiz?.time
+    || (quiz?.estimatedMinutes ? `${quiz.estimatedMinutes} min` : '1 min');
 
   return (
     <article className={`challenge-card ${themeClass}`}>
       <div className="challenge-card-header">
-        <span className="challenge-card-chip">{quiz?.level || 'Beginner'}</span>
+        <span className="challenge-card-chip">{formatLevelLabel(quiz?.level)}</span>
         <span className="challenge-card-time">
           <AppIcon name="question" size={14} />
           {questionCount} Questions
@@ -39,7 +43,7 @@ export default function ChallengeCard({ quiz }) {
         </span>
         <span>
           <AppIcon name="fire" size={15} />
-          {quiz?.time || '1 min'}
+          {timeLabel}
         </span>
       </div>
 

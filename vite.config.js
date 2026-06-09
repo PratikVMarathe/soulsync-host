@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const devPort = readPort(env, 'VITE_DEV_PORT', 5000);
   const previewPort = readPort(env, 'VITE_PREVIEW_PORT', devPort);
+  const authPopupHeaders = {
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+  };
 
   return {
     plugins: [
@@ -35,10 +38,12 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     server: {
+      headers: authPopupHeaders,
       port: devPort,
       strictPort: true,
     },
     preview: {
+      headers: authPopupHeaders,
       port: previewPort,
       strictPort: true,
       cors: true,

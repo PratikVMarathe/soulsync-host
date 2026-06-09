@@ -1,8 +1,11 @@
-import { startTransition, useEffect, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import AppStatusView from '../components/AppStatusView';
 import ChallengeCard from '../components/ChallengeCard';
 import AppIcon from '../components/AppIcon';
-import { db } from '../config/firebase';
+import { FEATURE_MESSAGES } from '../constants/featureMessages';
+import { useAppNotice } from '../hooks/useAppNotice';
+import { useActiveQuizzes } from '../hooks/useActiveQuizzes';
 
 const continueLearning = [
   {
@@ -40,40 +43,10 @@ function getFirstName(user) {
 }
 
 export default function Dashboard({ user }) {
-  const [quizzes, setQuizzes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchQuizzes = async () => {
-      try {
-        const quizQuery = query(collection(db, 'quizzes'), where('status', '==', 'Active'));
-        const querySnapshot = await getDocs(quizQuery);
-        const quizData = querySnapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .sort((left, right) => (left.title || '').localeCompare(right.title || ''));
-
-        startTransition(() => {
-          setQuizzes(quizData);
-          setError(null);
-        });
-      } catch (fetchError) {
-        console.error('Error fetching quizzes:', fetchError);
-        setError(
-          fetchError.code === 'permission-denied'
-            ? 'Your account cannot read the active concepts. Please check the Firestore rules for quizzes.'
-            : 'We could not load the active concepts. Please try again.',
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchQuizzes();
-  }, []);
+  const navigate = useNavigate();
+  const { showNotice } = useAppNotice();
+  const { quizzes, loading, error, retry } = useActiveQuizzes();
+  const previewQuizzes = quizzes.slice(0, 3);
 
   useEffect(() => {
     const targetId = window.sessionStorage.getItem('soulsync-scroll-target');
@@ -112,12 +85,16 @@ export default function Dashboard({ user }) {
             <span>Daily Spark</span>
             <h2>Focus on the action, not the outcome.</h2>
             <p>Established in yoga, perform your action, abandoning attachment, and remain balanced in success and failure.</p>
-            <button className="daily-spark-button" type="button">
+            <button
+              className="daily-spark-button"
+              onClick={() => showNotice(FEATURE_MESSAGES.DAILY_SPARK)}
+              type="button"
+            >
               Reflect on this
             </button>
           </div>
-
-          <div className="daily-spark-glow" aria-hidden="true" />
+{/* 
+          <div className="daily-spark-glow" aria-hidden="true" /> */}
         </article>
       </section>
 
@@ -127,7 +104,11 @@ export default function Dashboard({ user }) {
             <h2>Continue Learning</h2>
             <p>Return to the lessons you already started.</p>
           </div>
-          <button className="section-link" type="button">
+          <button
+            className="section-link"
+            onClick={() => showNotice(FEATURE_MESSAGES.CONTINUE_LEARNING)}
+            type="button"
+          >
             See all
           </button>
         </div>
@@ -154,7 +135,7 @@ export default function Dashboard({ user }) {
             <h2>Active Challenges</h2>
             <p>Pick a concept and test your understanding.</p>
           </div>
-          <button className="section-link" type="button">
+          <button className="section-link" onClick={() => navigate('/quiz')} type="button">
             See all
           </button>
         </div>
@@ -162,10 +143,17 @@ export default function Dashboard({ user }) {
         {loading ? (
           <div className="dashboard-state-card">Loading your concepts...</div>
         ) : error ? (
-          <div className="dashboard-state-card is-error">{error}</div>
-        ) : quizzes.length ? (
-          <div className="challenge-grid">
-            {quizzes.map((quiz) => (
+          <AppStatusView
+            compact
+            state={error}
+            actions={[
+              { label: 'Try Again', onClick: retry },
+              { label: 'View Profile', onClick: () => navigate('/profile'), tone: 'secondary' },
+            ]}
+          />
+        ) : previewQuizzes.length ? (
+          <div className="challenge-grid is-home-preview">
+            {previewQuizzes.map((quiz) => (
               <ChallengeCard key={quiz.id} quiz={quiz} />
             ))}
           </div>
@@ -187,7 +175,11 @@ export default function Dashboard({ user }) {
             <AppIcon name="message" size={20} />
             <p>Ask SoulGuide anything about focus, anger, detachment, or how to apply a verse in daily life.</p>
           </div>
-          <button className="ai-guide-input" type="button">
+          <button
+            className="ai-guide-input"
+            onClick={() => showNotice(FEATURE_MESSAGES.AI_GUIDE)}
+            type="button"
+          >
             <span>Ask anything...</span>
             <AppIcon name="arrow" size={18} />
           </button>
