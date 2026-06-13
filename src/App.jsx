@@ -141,9 +141,8 @@ function UserShell({ onUserChange, user }) {
   );
 }
 
-function AdminWorkspaceRoute({ onSignOut, signOutPending, user }) {
+function AdminWorkspaceRoute({ onSignOut, onUserChange, signOutPending, user }) {
   const location = useLocation();
-  const normalizedPath = location.pathname.replace(/\/+$/, '') || '/';
 
   if (!user) {
     return <Navigate replace to="/" />;
@@ -151,10 +150,6 @@ function AdminWorkspaceRoute({ onSignOut, signOutPending, user }) {
 
   if (!isAdminRole(user.role)) {
     return <Navigate replace to="/" />;
-  }
-
-  if (normalizedPath !== '/admin') {
-    return <NotFoundPage />;
   }
 
   return (
@@ -168,7 +163,12 @@ function AdminWorkspaceRoute({ onSignOut, signOutPending, user }) {
       resetKey={location.pathname}
     >
       <Suspense fallback={<div className="app-loading-screen">Loading admin workspace...</div>}>
-        <AdminModule onSignOut={onSignOut} signOutPending={signOutPending} viewer={user} />
+        <AdminModule
+          onSignOut={onSignOut}
+          onUserChange={onUserChange}
+          signOutPending={signOutPending}
+          viewer={user}
+        />
       </Suspense>
     </AppErrorBoundary>
   );
@@ -186,7 +186,7 @@ function GuestRoutes({ authError }) {
   );
 }
 
-function AdminRoutes({ onSignOut, signOutPending, user }) {
+function AdminRoutes({ onSignOut, onUserChange, signOutPending, user }) {
   return (
     <Routes>
       <Route element={<Navigate replace to="/admin/" />} path="/" />
@@ -194,6 +194,7 @@ function AdminRoutes({ onSignOut, signOutPending, user }) {
         element={(
           <AdminWorkspaceRoute
             onSignOut={onSignOut}
+            onUserChange={onUserChange}
             signOutPending={signOutPending}
             user={user}
           />
@@ -217,7 +218,14 @@ function AppRouter({
   }
 
   if (isAdminRole(user.role)) {
-    return <AdminRoutes onSignOut={onSignOut} signOutPending={signOutPending} user={user} />;
+    return (
+      <AdminRoutes
+        onSignOut={onSignOut}
+        onUserChange={onUserChange}
+        signOutPending={signOutPending}
+        user={user}
+      />
+    );
   }
 
   return <UserShell onUserChange={onUserChange} user={user} />;

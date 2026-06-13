@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import AppIcon from '../components/AppIcon';
 import { updateCurrentUserProfile } from '../services/sessionService';
-import { formatRoleLabel } from '../utils/identity';
+import { formatRoleLabel, sanitizePhoneInput } from '../utils/identity';
 
 function formatDate(value) {
   if (!value) return 'Recently';
@@ -30,7 +30,6 @@ function getInitials(user) {
 export default function ProfilePage({ onUserChange, user }) {
   const [formState, setFormState] = useState({
     name: '',
-    email: '',
     phoneNumber: '',
   });
   const [feedback, setFeedback] = useState({ error: '', success: '' });
@@ -39,22 +38,21 @@ export default function ProfilePage({ onUserChange, user }) {
   useEffect(() => {
     setFormState({
       name: user?.profile?.name || user?.displayName || '',
-      email: user?.profile?.email || user?.email || '',
       phoneNumber: user?.profile?.phoneNumber || '',
     });
   }, [user]);
 
   const profile = user?.profile || {};
   const initials = getInitials(user);
-  const canEditEmail = !profile.email;
   const canEditPhone = !profile.phoneNumber;
   const memberSince = useMemo(() => formatDate(profile.createdAt), [profile.createdAt]);
+  const profileEmail = profile.email || user?.email || 'Not available';
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormState((current) => ({
       ...current,
-      [name]: value,
+      [name]: name === 'phoneNumber' ? sanitizePhoneInput(value) : value,
     }));
     setFeedback({ error: '', success: '' });
   };
@@ -69,7 +67,6 @@ export default function ProfilePage({ onUserChange, user }) {
       onUserChange(nextViewer);
       setFormState({
         name: nextViewer.profile?.name || nextViewer.displayName || '',
-        email: nextViewer.profile?.email || nextViewer.email || '',
         phoneNumber: nextViewer.profile?.phoneNumber || '',
       });
       setFeedback({
@@ -135,7 +132,7 @@ export default function ProfilePage({ onUserChange, user }) {
           <div>
             <h2>Personal Details</h2>
             <p>
-              You can update your name anytime. Email and phone become read-only after they are set.
+              You can update your name anytime. Phone can only be added once, and then it becomes read-only.
             </p>
           </div>
         </div>
@@ -162,26 +159,11 @@ export default function ProfilePage({ onUserChange, user }) {
           </label>
 
           <label className="profile-field">
-            <span>Email Address</span>
-            <input
-              disabled={!canEditEmail}
-              name="email"
-              onChange={handleChange}
-              placeholder="Google email"
-              type="email"
-              value={formState.email}
-            />
-            <small>
-              {canEditEmail
-                ? 'If this field is empty, you can set it once to match your Google account email.'
-                : 'Email is locked after it is set.'}
-            </small>
-          </label>
-
-          <label className="profile-field">
             <span>Phone Number</span>
             <input
               disabled={!canEditPhone}
+              inputMode="numeric"
+              maxLength={10}
               name="phoneNumber"
               onChange={handleChange}
               placeholder="Add phone number"
@@ -197,13 +179,17 @@ export default function ProfilePage({ onUserChange, user }) {
 
           <div className="profile-readonly-grid">
             <article className="profile-readonly-card">
+              <span>Email Address</span>
+              <strong>{profileEmail}</strong>
+            </article>
+            {/* <article className="profile-readonly-card">
               <span>Role</span>
               <strong>{formatRoleLabel(user?.role)}</strong>
             </article>
             <article className="profile-readonly-card">
               <span>Status</span>
               <strong>{user?.status || 'ACTIVE'}</strong>
-            </article>
+            </article> */}
           </div>
 
           <div className="profile-form-actions">

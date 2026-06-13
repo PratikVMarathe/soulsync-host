@@ -2,16 +2,16 @@ import { IDENTITY_TYPES } from '../constants/auth';
 
 export const normalizeEmail = (email) => email?.trim().toLowerCase() || '';
 
+export const extractPhoneDigits = (phoneNumber) => String(phoneNumber || '').replace(/\D/g, '');
+
+export const sanitizePhoneInput = (phoneNumber) => extractPhoneDigits(phoneNumber).slice(0, 10);
+
 export const normalizePhoneNumber = (phoneNumber) => {
-  if (!phoneNumber) return '';
-
-  const digits = String(phoneNumber).replace(/\D/g, '');
-  if (!digits) return '';
-
-  return String(phoneNumber).trim().startsWith('+')
-    ? `+${digits}`
-    : digits;
+  const digits = extractPhoneDigits(phoneNumber);
+  return digits.length === 10 ? digits : '';
 };
+
+export const isValidPhoneNumber = (phoneNumber) => extractPhoneDigits(phoneNumber).length === 10;
 
 export const getPhoneIdentityKey = (phoneNumber) => normalizePhoneNumber(phoneNumber).replace(/\D/g, '');
 
