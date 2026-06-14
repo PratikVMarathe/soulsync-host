@@ -1,0 +1,21 @@
+{
+  "hosting": {
+    "site": "soulsync-dev-host",
+    "public": "dist",
+    "ignore": [
+      "firebase.dev.json",
+      "firebase.prod.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}
