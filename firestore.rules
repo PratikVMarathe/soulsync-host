@@ -1,0 +1,759 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function authEmail() {
+      return signedIn() && request.auth.token.email is string
+        ? request.auth.token.email
+        : '';
+    }
+
+    function ownUserPath() {
+      return path('/databases/' + database + '/documents/users/' + request.auth.uid);
+    }
+
+    function ownUserExists() {
+      return signedIn() && exists(ownUserPath());
+    }
+
+    function ownUser() {
+      return get(ownUserPath()).data;
+    }
+
+    function isOwnUserDocument(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isTenDigitPhone(phoneNumber) {
+      return phoneNumber is string && phoneNumber.matches('^[0-9]{10}$');
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$');
+    }
+
+    function isKnownRole(role) {
+      return role == 'USER' || role == 'ADMIN' || role == 'SUPER_ADMIN';
+    }
+
+    function isActiveActor() {
+      return ownUserExists()
+        && ownUser().status == 'ACTIVE'
+        && ownUser().isDeleted != true;
+    }
+
+    function isAdminActor() {
+      return isActiveActor()
+        && (ownUser().role == 'ADMIN' || ownUser().role == 'SUPER_ADMIN');
+    }
+
+    function isSuperAdminActor() {
+      return isActiveActor() && ownUser().role == 'SUPER_ADMIN';
+    }
+
+    function emailLockPath(emailLower) {
+      return path('/databases/' + database + '/documents/identityLocks/email_' + emailLower);
+    }
+
+    function phoneLockPath(phoneNumber) {
+      return path('/databases/' + database + '/documents/identityLocks/phone_' + phoneNumber);
+    }
+
+    function adminInvitePath(inviteId) {
+      return path('/databases/' + database + '/documents/adminInvites/' + inviteId);
+    }
+
+    function canClaimEmailLock(emailLower) {
+      return !exists(emailLockPath(emailLower))
+        || get(emailLockPath(emailLower)).data.status == 'RELEASED'
+        || get(emailLockPath(emailLower)).data.uid == request.auth.uid;
+    }
+
+    function canClaimPhoneLock(phoneNumber) {
+      return !exists(phoneLockPath(phoneNumber))
+        || get(phoneLockPath(phoneNumber)).data.status == 'RELEASED'
+        || get(phoneLockPath(phoneNumber)).data.uid == request.auth.uid;
+    }
+
+    function pendingAdminInviteEmailLock(emailLower) {
+      return exists(emailLockPath(emailLower))
+        && get(emailLockPath(emailLower)).data.type == 'EMAIL'
+        && get(emailLockPath(emailLower)).data.role == 'ADMIN'
+        && get(emailLockPath(emailLower)).data.status == 'LOCKED'
+        && get(emailLockPath(emailLower)).data.reason == 'ADMIN_INVITE'
+        && get(emailLockPath(emailLower)).data.uid == null;
+    }
+
+    function pendingAdminInvitePhoneLock(phoneNumber) {
+      return exists(phoneLockPath(phoneNumber))
+        && get(phoneLockPath(phoneNumber)).data.type == 'PHONE'
+        && get(phoneLockPath(phoneNumber)).data.role == 'ADMIN'
+        && get(phoneLockPath(phoneNumber)).data.status == 'LOCKED'
+        && get(phoneLockPath(phoneNumber)).data.reason == 'ADMIN_INVITE'
+        && get(phoneLockPath(phoneNumber)).data.uid == null;
+    }
+
+    function inviteMatchesAuthEmail(inviteId) {
+      return inviteId is string
+        && exists(adminInvitePath(inviteId))
+        && get(adminInvitePath(inviteId)).data.emailLower == authEmail();
+    }
+
+    function validOwnUserCreate(userId) {
+      return request.resource.data.keys().hasAll([
+          'uid',
+          'name',
+          'email',
+          'emailLower',
+          'role',
+          'status',
+          'isRootSuperAdmin',
+          'isDeleted',
+          'createdAt',
+          'updatedAt',
+          'createdBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'isRootSuperAdmin',
+          'isDeleted',
+          'createdAt',
+          'updatedAt',
+          'createdBy'
+        ])
+        && request.resource.data.uid == userId
+        && request.resource.data.name is string
+        && request.resource.data.email == request.auth.token.email
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.emailLower is string
+        && request.resource.data.role == 'USER'
+        && request.resource.data.status == 'ACTIVE'
+        && request.resource.data.isRootSuperAdmin == false
+        && request.resource.data.isDeleted == false
+        && request.resource.data.createdBy == null
+        && (!request.resource.data.keys().hasAny(['phoneNumber']) || request.resource.data.phoneNumber == null || isTenDigitPhone(request.resource.data.phoneNumber))
+        && canClaimEmailLock(request.resource.data.emailLower)
+        && (!request.resource.data.keys().hasAny(['phoneNumber']) || request.resource.data.phoneNumber == null || canClaimPhoneLock(request.resource.data.phoneNumber))
+        && !pendingAdminInviteEmailLock(request.resource.data.emailLower);
+    }
+
+    function validOwnAdminCreate(userId) {
+      return request.resource.data.keys().hasAll([
+          'uid',
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'isRootSuperAdmin',
+          'isDeleted',
+          'createdAt',
+          'updatedAt',
+          'createdBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'isRootSuperAdmin',
+          'isDeleted',
+          'createdAt',
+          'updatedAt',
+          'createdBy'
+        ])
+        && request.resource.data.uid == userId
+        && request.resource.data.name is string
+        && request.resource.data.email == request.auth.token.email
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.emailLower == authEmail()
+        && request.resource.data.phoneNumber != null
+        && isTenDigitPhone(request.resource.data.phoneNumber)
+        && request.resource.data.role == 'ADMIN'
+        && request.resource.data.status == 'ACTIVE'
+        && request.resource.data.isRootSuperAdmin == false
+        && request.resource.data.isDeleted == false
+        && request.resource.data.createdBy is string
+        && pendingAdminInviteEmailLock(request.resource.data.emailLower)
+        && pendingAdminInvitePhoneLock(request.resource.data.phoneNumber);
+    }
+
+    function validOwnUserUpdate() {
+      return request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'isRootSuperAdmin',
+          'isDeleted',
+          'createdAt',
+          'updatedAt',
+          'createdBy'
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.uid == resource.data.uid
+        && (
+          (
+            resource.data.email != null
+            && resource.data.email != ''
+            && request.resource.data.email == resource.data.email
+            && request.resource.data.emailLower == resource.data.emailLower
+          ) || (
+            (resource.data.email == null || resource.data.email == '')
+            && request.auth.token.email != null
+            && request.resource.data.email == request.auth.token.email
+            && request.resource.data.emailLower is string
+          )
+        )
+        && (
+          request.resource.data.phoneNumber == resource.data.phoneNumber
+          || (
+            (resource.data.phoneNumber == null || resource.data.phoneNumber == '')
+            && (
+              !request.resource.data.keys().hasAny(['phoneNumber'])
+              || request.resource.data.phoneNumber == null
+              || isTenDigitPhone(request.resource.data.phoneNumber)
+            )
+          )
+        )
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.isRootSuperAdmin == resource.data.isRootSuperAdmin
+        && request.resource.data.isDeleted == resource.data.isDeleted
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy;
+    }
+
+    function validManagedAdminUpdate(userId) {
+      return request.resource.data.keys().hasOnly([
+          'uid',
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'isRootSuperAdmin',
+          'isDeleted',
+          'createdAt',
+          'updatedAt',
+          'createdBy'
+        ])
+        && (resource.data.role == 'ADMIN' || resource.data.role == 'SUPER_ADMIN')
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.uid == userId
+        && request.resource.data.name is string
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.emailLower == request.resource.data.email
+        && request.resource.data.phoneNumber != null
+        && isTenDigitPhone(request.resource.data.phoneNumber)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.isRootSuperAdmin == resource.data.isRootSuperAdmin
+        && request.resource.data.isDeleted == resource.data.isDeleted
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy;
+    }
+
+    function validPhoneIdentityLockId(documentId) {
+      return documentId.matches('^phone_[0-9]{10}$');
+    }
+
+    function validEmailIdentityLockId(documentId) {
+      return documentId.matches('^email_.+$');
+    }
+
+    function validSelfManagedIdentityLock(documentId) {
+      return request.resource.data.keys().hasAll([
+          'type',
+          'value',
+          'uid',
+          'role',
+          'status',
+          'reason',
+          'lockedBy',
+          'lockedAt',
+          'releasedAt',
+          'releasedBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'type',
+          'value',
+          'valueNormalized',
+          'uid',
+          'role',
+          'status',
+          'reason',
+          'inviteId',
+          'lockedBy',
+          'lockedAt',
+          'releasedAt',
+          'releasedBy',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && isKnownRole(request.resource.data.role)
+        && request.resource.data.status == 'LOCKED'
+        && request.resource.data.reason == 'ACTIVE_ACCOUNT'
+        && request.resource.data.lockedBy is string
+        && request.resource.data.releasedAt == null
+        && request.resource.data.releasedBy == null
+        && (
+          (
+            request.resource.data.type == 'EMAIL'
+            && validEmailIdentityLockId(documentId)
+            && isValidEmail(request.resource.data.value)
+            && request.resource.data.valueNormalized == authEmail()
+            && documentId == 'email_' + request.resource.data.valueNormalized
+          ) || (
+            request.resource.data.type == 'PHONE'
+            && validPhoneIdentityLockId(documentId)
+            && isTenDigitPhone(request.resource.data.value)
+            && (!request.resource.data.keys().hasAny(['valueNormalized']) || isTenDigitPhone(request.resource.data.valueNormalized))
+            && documentId == 'phone_' + request.resource.data.value
+          )
+        );
+    }
+
+    function validAdminInviteLockCreate(documentId) {
+      return request.resource.data.keys().hasAll([
+          'type',
+          'value',
+          'uid',
+          'role',
+          'status',
+          'reason',
+          'inviteId',
+          'lockedBy',
+          'lockedAt',
+          'releasedAt',
+          'releasedBy'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'type',
+          'value',
+          'valueNormalized',
+          'uid',
+          'role',
+          'status',
+          'reason',
+          'inviteId',
+          'lockedBy',
+          'lockedAt',
+          'releasedAt',
+          'releasedBy',
+          'updatedAt'
+        ])
+        && request.resource.data.uid == null
+        && request.resource.data.role == 'ADMIN'
+        && request.resource.data.status == 'LOCKED'
+        && request.resource.data.reason == 'ADMIN_INVITE'
+        && request.resource.data.inviteId is string
+        && request.resource.data.lockedBy == request.auth.uid
+        && request.resource.data.releasedAt == null
+        && request.resource.data.releasedBy == null
+        && (
+          (
+            request.resource.data.type == 'EMAIL'
+            && validEmailIdentityLockId(documentId)
+            && isValidEmail(request.resource.data.value)
+            && request.resource.data.valueNormalized == request.resource.data.value
+            && documentId == 'email_' + request.resource.data.valueNormalized
+          ) || (
+            request.resource.data.type == 'PHONE'
+            && validPhoneIdentityLockId(documentId)
+            && isTenDigitPhone(request.resource.data.value)
+            && request.resource.data.valueNormalized == request.resource.data.value
+            && documentId == 'phone_' + request.resource.data.value
+          )
+        );
+    }
+
+    function canReadIdentityLock() {
+      return isAdminActor()
+        || resource.data.uid == request.auth.uid
+        || (
+          resource.data.type == 'EMAIL'
+          && resource.data.valueNormalized == authEmail()
+        ) || (
+          resource.data.reason == 'ADMIN_INVITE'
+          && inviteMatchesAuthEmail(resource.data.inviteId)
+        );
+    }
+
+    function validAdminInviteCreate() {
+      return request.resource.data.keys().hasAll([
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'invitedBy',
+          'invitedByName',
+          'acceptedByUid',
+          'acceptedAt',
+          'cancelledBy',
+          'cancelledAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'invitedBy',
+          'invitedByName',
+          'acceptedByUid',
+          'acceptedAt',
+          'cancelledBy',
+          'cancelledAt',
+          'expiresAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.invitedBy == request.auth.uid
+        && request.resource.data.invitedByName is string
+        && isValidEmail(request.resource.data.email)
+        && request.resource.data.emailLower == request.resource.data.email
+        && isTenDigitPhone(request.resource.data.phoneNumber)
+        && request.resource.data.role == 'ADMIN'
+        && request.resource.data.status == 'PENDING'
+        && request.resource.data.acceptedByUid == null
+        && request.resource.data.acceptedAt == null
+        && request.resource.data.cancelledBy == null
+        && request.resource.data.cancelledAt == null
+        && (!request.resource.data.keys().hasAny(['expiresAt']) || request.resource.data.expiresAt == null || request.resource.data.expiresAt is timestamp)
+        && (!request.resource.data.keys().hasAny(['name']) || request.resource.data.name == null || request.resource.data.name is string);
+    }
+
+    function validAdminInviteAcceptanceUpdate() {
+      return resource.data.emailLower == authEmail()
+        && resource.data.status == 'PENDING'
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'invitedBy',
+          'invitedByName',
+          'acceptedByUid',
+          'acceptedAt',
+          'cancelledBy',
+          'cancelledAt',
+          'expiresAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.emailLower == resource.data.emailLower
+        && request.resource.data.phoneNumber == resource.data.phoneNumber
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.invitedBy == resource.data.invitedBy
+        && request.resource.data.invitedByName == resource.data.invitedByName
+        && request.resource.data.cancelledBy == resource.data.cancelledBy
+        && request.resource.data.cancelledAt == resource.data.cancelledAt
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status == 'ACCEPTED'
+        && request.resource.data.acceptedByUid == request.auth.uid
+        && request.resource.data.acceptedAt is timestamp;
+    }
+
+    function validSuperAdminAdminInviteUpdate() {
+      return request.resource.data.keys().hasOnly([
+          'name',
+          'email',
+          'emailLower',
+          'phoneNumber',
+          'role',
+          'status',
+          'invitedBy',
+          'invitedByName',
+          'acceptedByUid',
+          'acceptedAt',
+          'cancelledBy',
+          'cancelledAt',
+          'expiresAt',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.emailLower == resource.data.emailLower
+        && request.resource.data.phoneNumber == resource.data.phoneNumber
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.invitedBy == resource.data.invitedBy
+        && request.resource.data.invitedByName == resource.data.invitedByName
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (
+          (
+            resource.data.status == 'PENDING'
+            && request.resource.data.status == 'CANCELLED'
+            && request.resource.data.cancelledBy == request.auth.uid
+            && request.resource.data.cancelledAt is timestamp
+            && request.resource.data.acceptedByUid == resource.data.acceptedByUid
+            && request.resource.data.acceptedAt == resource.data.acceptedAt
+          ) || (
+            (
+              resource.data.status == 'EXPIRED'
+              || resource.data.status == 'CANCELLED'
+              || (
+                resource.data.status == 'PENDING'
+                && resource.data.expiresAt is timestamp
+                && resource.data.expiresAt <= request.time
+              )
+            )
+            && request.resource.data.status == 'PENDING'
+            && request.resource.data.cancelledBy == null
+            && request.resource.data.cancelledAt == null
+            && request.resource.data.acceptedByUid == resource.data.acceptedByUid
+            && request.resource.data.acceptedAt == resource.data.acceptedAt
+            && request.resource.data.expiresAt is timestamp
+          )
+        );
+    }
+
+    function validSuperAdminIdentityLockUpdate(documentId) {
+      return request.resource.data.keys().hasOnly([
+          'type',
+          'value',
+          'valueNormalized',
+          'uid',
+          'role',
+          'status',
+          'reason',
+          'inviteId',
+          'lockedBy',
+          'lockedAt',
+          'releasedAt',
+          'releasedBy',
+          'updatedAt'
+        ])
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.value == resource.data.value
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.inviteId == resource.data.inviteId
+        && (
+          (
+            request.resource.data.type == 'EMAIL'
+            && validEmailIdentityLockId(documentId)
+            && isValidEmail(request.resource.data.value)
+            && request.resource.data.valueNormalized == request.resource.data.value
+            && documentId == 'email_' + request.resource.data.valueNormalized
+          ) || (
+            request.resource.data.type == 'PHONE'
+            && validPhoneIdentityLockId(documentId)
+            && isTenDigitPhone(request.resource.data.value)
+            && request.resource.data.valueNormalized == request.resource.data.value
+            && documentId == 'phone_' + request.resource.data.value
+          )
+        )
+        && (
+          (
+            request.resource.data.status == 'RELEASED'
+            && (request.resource.data.reason == 'ADMIN_INVITE_CANCELLED' || request.resource.data.reason == 'MANUALLY_RELEASED')
+            && request.resource.data.releasedBy == request.auth.uid
+            && request.resource.data.releasedAt is timestamp
+            && request.resource.data.uid == resource.data.uid
+          ) || (
+            request.resource.data.status == 'LOCKED'
+            && (request.resource.data.reason == 'ACTIVE_ACCOUNT' || request.resource.data.reason == 'ADMIN_INVITE')
+            && request.resource.data.lockedBy is string
+            && request.resource.data.releasedAt == null
+            && request.resource.data.releasedBy == null
+          )
+        );
+    }
+
+    function validSuperAdminIdentityLockCreate(documentId) {
+      return request.resource.data.keys().hasOnly([
+          'type',
+          'value',
+          'valueNormalized',
+          'uid',
+          'role',
+          'status',
+          'reason',
+          'inviteId',
+          'lockedBy',
+          'lockedAt',
+          'releasedAt',
+          'releasedBy',
+          'updatedAt'
+        ])
+        && (request.resource.data.role == 'ADMIN' || request.resource.data.role == 'SUPER_ADMIN')
+        && request.resource.data.status == 'LOCKED'
+        && request.resource.data.lockedBy is string
+        && request.resource.data.releasedAt == null
+        && request.resource.data.releasedBy == null
+        && (
+          (
+            request.resource.data.type == 'EMAIL'
+            && validEmailIdentityLockId(documentId)
+            && isValidEmail(request.resource.data.value)
+            && request.resource.data.valueNormalized == request.resource.data.value
+            && documentId == 'email_' + request.resource.data.valueNormalized
+          ) || (
+            request.resource.data.type == 'PHONE'
+            && validPhoneIdentityLockId(documentId)
+            && isTenDigitPhone(request.resource.data.value)
+            && request.resource.data.valueNormalized == request.resource.data.value
+            && documentId == 'phone_' + request.resource.data.value
+          )
+        )
+        && (
+          (
+            request.resource.data.reason == 'ADMIN_INVITE'
+            && request.resource.data.uid == null
+            && request.resource.data.inviteId is string
+          ) || (
+            request.resource.data.reason == 'ACTIVE_ACCOUNT'
+            && request.resource.data.uid is string
+          )
+        );
+    }
+
+    function validAuditLogCreate() {
+      return request.resource.data.keys().hasAll([
+          'action',
+          'performedBy',
+          'performedByRole',
+          'status',
+          'createdAt',
+          'targetEmail',
+          'targetRole'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'action',
+          'performedBy',
+          'performedByRole',
+          'invitedBy',
+          'status',
+          'createdAt',
+          'targetEmail',
+          'targetPhoneNumber',
+          'targetRole'
+        ])
+        && request.resource.data.performedBy == request.auth.uid
+        && request.resource.data.status == 'SUCCESS'
+        && isValidEmail(request.resource.data.targetEmail)
+        && isKnownRole(request.resource.data.targetRole)
+        && (
+          (
+            request.resource.data.action == 'ADMIN_INVITE_CREATED'
+            && request.resource.data.performedByRole == 'SUPER_ADMIN'
+            && isSuperAdminActor()
+          ) || (
+            request.resource.data.action == 'ADMIN_INVITE_CANCELLED'
+            && request.resource.data.performedByRole == 'SUPER_ADMIN'
+            && isSuperAdminActor()
+          ) || (
+            request.resource.data.action == 'ADMIN_INVITE_RESENT'
+            && request.resource.data.performedByRole == 'SUPER_ADMIN'
+            && isSuperAdminActor()
+          ) || (
+            request.resource.data.action == 'ADMIN_PROFILE_UPDATED'
+            && request.resource.data.performedByRole == 'SUPER_ADMIN'
+            && isSuperAdminActor()
+          ) || (
+            request.resource.data.action == 'ADMIN_INVITE_ACCEPTED'
+            && request.resource.data.performedByRole == 'ADMIN'
+            && signedIn()
+            && pendingAdminInviteEmailLock(request.resource.data.targetEmail)
+          )
+        )
+        && (!request.resource.data.keys().hasAny(['targetPhoneNumber']) || request.resource.data.targetPhoneNumber == null || isTenDigitPhone(request.resource.data.targetPhoneNumber));
+    }
+
+    function isActiveQuiz() {
+      return resource.data.status == 'ACTIVE' || resource.data.status == 'Active';
+    }
+
+    match /users/{userId} {
+      allow get: if isOwnUserDocument(userId) || isAdminActor();
+      allow list: if isAdminActor();
+
+      allow create: if isOwnUserDocument(userId)
+        && !exists(path('/databases/' + database + '/documents/users/' + userId))
+        && (validOwnUserCreate(userId) || validOwnAdminCreate(userId));
+
+      allow update: if (isOwnUserDocument(userId) && isActiveActor() && validOwnUserUpdate())
+        || (isSuperAdminActor() && validManagedAdminUpdate(userId));
+
+      allow delete: if false;
+    }
+
+    match /quizzes/{quizId} {
+      allow get, list: if isAdminActor() || (isActiveActor() && isActiveQuiz());
+      allow create, update, delete: if isAdminActor();
+    }
+
+    match /system/{documentId} {
+      allow read: if isAdminActor();
+      allow write: if false;
+    }
+
+    match /adminInvites/{documentId} {
+      allow get: if isAdminActor() || (signedIn() && resource.data.emailLower == authEmail());
+      allow list: if isAdminActor();
+      allow create: if isSuperAdminActor() && validAdminInviteCreate();
+      allow update: if validAdminInviteAcceptanceUpdate()
+        || (isSuperAdminActor() && validSuperAdminAdminInviteUpdate());
+      allow delete: if false;
+    }
+
+    match /identityLocks/{documentId} {
+      allow get: if signedIn() && canReadIdentityLock();
+      allow list: if isSuperAdminActor();
+      allow create: if (signedIn() && validSelfManagedIdentityLock(documentId))
+        || (isSuperAdminActor() && (
+          validAdminInviteLockCreate(documentId)
+          || validSuperAdminIdentityLockCreate(documentId)
+        ));
+      allow update: if (signedIn() && validSelfManagedIdentityLock(documentId) && (
+          resource.data.uid == request.auth.uid
+          || (
+            resource.data.uid == null
+            && resource.data.reason == 'ADMIN_INVITE'
+            && inviteMatchesAuthEmail(resource.data.inviteId)
+          )
+        ))
+        || (isSuperAdminActor() && validSuperAdminIdentityLockUpdate(documentId));
+      allow delete: if false;
+    }
+
+    match /auditLogs/{documentId} {
+      allow get, list: if isAdminActor();
+      allow create: if signedIn() && validAuditLogCreate();
+      allow update, delete: if false;
+    }
+
+    match /reservedIdentities/{documentId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
