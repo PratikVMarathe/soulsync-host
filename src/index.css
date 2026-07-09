@@ -366,7 +366,7 @@ button {
   display: grid;
   gap: 1.5rem;
   grid-template-columns: minmax(0, 0.92fr) minmax(28rem, 1.08fr);
-  padding: 1.2rem 0 2.4rem 3.2rem;
+  padding: 1.2rem 0 2.4rem 0;
   position: relative;
   z-index: 1;
 }
