@@ -36,7 +36,7 @@ const ACCESS_DENIED_MESSAGES = {
   MISSING_EMAIL: 'Your Google account did not provide an email address, so SoulSync could not complete sign in.',
   PHONE_IN_USE: 'This phone number is already locked for another SoulSync account or admin invite.',
   PHONE_INVALID: 'Phone number must be exactly 10 digits.',
-  PERMISSION_DENIED: 'Google sign in worked, but Firestore blocked access to your SoulSync user profile. Update the rules for users/{uid}.',
+  PERMISSION_DENIED: 'Google sign in worked, but Firestore blocked SoulSync profile setup. Update the rules for users/{uid}, identityLocks, and adminInvites.',
   PHONE_LOCKED: 'Phone number can only be set once. Ask an administrator if it needs to be changed.',
   REGISTRATION_FAILED: 'We could not complete your registration right now. Please try again.',
   SOFT_DELETED: 'This SoulSync account was removed and cannot be used until an administrator restores it.',

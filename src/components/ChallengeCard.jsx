@@ -9,6 +9,11 @@ const themeMap = {
   purpose: 'is-sand',
 };
 
+function formatEstimatedTime(seconds) {
+  const minutes = Math.max(1, Math.ceil(Number(seconds || 0) / 60));
+  return `${minutes} ${minutes === 1 ? 'min' : 'mins'}`;
+}
+
 function getDisplayTitle(title) {
   return (title || 'Concept').replace(/^Concept\s+\d+\s*:\s*/i, '');
 }
@@ -17,8 +22,10 @@ export default function ChallengeCard({ quiz }) {
   const navigate = useNavigate();
   const themeClass = themeMap[quiz?.slug] || themeMap[quiz?.category] || 'is-forest';
   const questionCount = quiz?.questions?.length || 0;
+  const quizPathKey = quiz?.slug || quiz?.id;
   const timeLabel = quiz?.timeLimitLabel
     || quiz?.time
+    || (quiz?.estimatedTime ? formatEstimatedTime(quiz.estimatedTime) : null)
     || (quiz?.estimatedMinutes ? `${quiz.estimatedMinutes} min` : '1 min');
 
   return (
@@ -49,7 +56,7 @@ export default function ChallengeCard({ quiz }) {
 
       <button
         className="challenge-card-action"
-        onClick={() => navigate(`/quiz/${quiz.id}`)}
+        onClick={() => navigate(`/quiz/${quizPathKey}`)}
         type="button"
       >
         <span>Start Concept</span>

@@ -55,6 +55,12 @@ export default defineConfig(({ mode }) => {
       cors: true,
     },
     build: {
+      // The federation plugin rewrites string inputs incorrectly on Windows.
+      rollupOptions: {
+        input: {
+          index: 'index.html',
+        },
+      },
       target: 'esnext',
     },
   };

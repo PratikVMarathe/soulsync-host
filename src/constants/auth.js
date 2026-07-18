@@ -44,4 +44,4 @@ export const ADMIN_ROLES = [
   USER_ROLES.ADMIN,
 ];
 
-export const ACTIVE_QUIZ_STATUSES = ['ACTIVE', 'Active'];
+export const ACTIVE_QUIZ_STATUSES = ['ACTIVE'];
