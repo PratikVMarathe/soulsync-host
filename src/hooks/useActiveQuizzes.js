@@ -1,8 +1,6 @@
 import { startTransition, useEffect, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { ACTIVE_QUIZ_STATUSES } from '../constants/auth';
-import { db } from '../config/firebase';
 import { resolveAppErrorState } from '../utils/resolveAppErrorState';
+import { loadAvailableQuizzes } from '../services/quizCatalogService';
 
 export function useActiveQuizzes() {
   const [quizzes, setQuizzes] = useState([]);
@@ -15,17 +13,7 @@ export function useActiveQuizzes() {
       setLoading(true);
 
       try {
-        const quizQuery = query(
-          collection(db, 'quizzes'),
-          where('status', 'in', ACTIVE_QUIZ_STATUSES),
-        );
-        const querySnapshot = await getDocs(quizQuery);
-        const quizData = querySnapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .sort((left, right) => (left.title || '').localeCompare(right.title || ''));
+        const quizData = await loadAvailableQuizzes();
 
         startTransition(() => {
           setQuizzes(quizData);

@@ -1068,6 +1068,31 @@ button {
   position: relative;
 }
 
+.challenge-card-image {
+  border-radius: 1rem;
+  height: 10rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.challenge-card-image::after {
+  background:
+    linear-gradient(180deg, rgba(24, 53, 48, 0.04) 0%, rgba(24, 53, 48, 0.28) 100%),
+    radial-gradient(circle at 80% 15%, rgba(255, 255, 255, 0.26), transparent 42%);
+  content: '';
+  inset: 0;
+  position: absolute;
+}
+
+.challenge-card-image img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
 .challenge-card::after {
   border-radius: 999px;
   content: '';
@@ -1080,7 +1105,7 @@ button {
 }
 
 .challenge-card.is-forest {
-  background: linear-gradient(180deg, #305d4b 0%, #45775f 100%);
+  background: linear-gradient(300deg, #d7e5d5  0%, #45775f 100%);
   color: #fff;
 }
 
@@ -1517,6 +1542,42 @@ button {
   margin-top: 0.2rem;
 }
 
+.quiz-library-filters {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.35fr) minmax(10rem, 0.35fr);
+  margin-top: 1.35rem;
+}
+
+.quiz-library-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.quiz-library-filters span {
+  color: var(--soul-green-deep);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.quiz-library-filters input,
+.quiz-library-filters select {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(25, 53, 48, 0.1);
+  border-radius: 1rem;
+  color: var(--soul-text);
+  min-height: 3.1rem;
+  outline: none;
+  padding: 0 1rem;
+}
+
+.quiz-library-filters input:focus,
+.quiz-library-filters select:focus {
+  border-color: rgba(45, 106, 79, 0.42);
+  box-shadow: 0 0 0 4px rgba(45, 106, 79, 0.08);
+}
+
 .quiz-library-grid {
   display: grid;
   gap: 1rem;
@@ -1754,8 +1815,13 @@ button {
   .dashboard-heading,
   .section-heading,
   .quiz-library-header,
+  .quiz-library-filters,
   .ai-guide-panel {
     flex-direction: column;
+  }
+
+  .quiz-library-filters {
+    grid-template-columns: 1fr;
   }
 
   .profile-summary-grid,
