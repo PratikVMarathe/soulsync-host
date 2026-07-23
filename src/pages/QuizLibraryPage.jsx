@@ -2,13 +2,22 @@ import { useEffect, useState } from 'react';
 import AppStatusView from '../components/AppStatusView';
 import ChallengeCard from '../components/ChallengeCard';
 import { useActiveQuizzes } from '../hooks/useActiveQuizzes';
+import { filterQuizzes, getQuizFilterOptions } from '../services/quizCatalogService';
+import { formatLevelLabel } from '../utils/identity';
 
 const QUIZZES_PER_PAGE = 6;
 
 export default function QuizLibraryPage() {
   const { quizzes, loading, error, retry } = useActiveQuizzes();
+  const [filters, setFilters] = useState({
+    category: '',
+    level: '',
+    search: '',
+  });
   const [page, setPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(quizzes.length / QUIZZES_PER_PAGE));
+  const filterOptions = getQuizFilterOptions(quizzes);
+  const filteredQuizzes = filterQuizzes(quizzes, filters);
+  const totalPages = Math.max(1, Math.ceil(filteredQuizzes.length / QUIZZES_PER_PAGE));
 
   useEffect(() => {
     if (page > totalPages) {
@@ -16,8 +25,19 @@ export default function QuizLibraryPage() {
     }
   }, [page, totalPages]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [filters.category, filters.level, filters.search]);
+
+  const updateFilter = (field, value) => {
+    setFilters((currentFilters) => ({
+      ...currentFilters,
+      [field]: value,
+    }));
+  };
+
   const startIndex = (page - 1) * QUIZZES_PER_PAGE;
-  const visibleQuizzes = quizzes.slice(startIndex, startIndex + QUIZZES_PER_PAGE);
+  const visibleQuizzes = filteredQuizzes.slice(startIndex, startIndex + QUIZZES_PER_PAGE);
 
   return (
     <div className="quiz-library-page">
@@ -29,9 +49,47 @@ export default function QuizLibraryPage() {
             <p>Explore every live concept quiz and move through them at your own pace.</p>
           </div>
           <div className="quiz-library-summary">
-            <strong>{quizzes.length}</strong>
-            <span>Active quizzes</span>
+            <strong>{filteredQuizzes.length}</strong>
+            <span>Visible quizzes</span>
           </div>
+        </div>
+
+        <div className="quiz-library-filters" aria-label="Quiz filters">
+          <label className="quiz-library-search">
+            <span>Search</span>
+            <input
+              onChange={(event) => updateFilter('search', event.target.value)}
+              placeholder="Search by title, category, or level"
+              type="search"
+              value={filters.search}
+            />
+          </label>
+
+          <label>
+            <span>Category</span>
+            <select
+              onChange={(event) => updateFilter('category', event.target.value)}
+              value={filters.category}
+            >
+              <option value="">All Categories</option>
+              {filterOptions.categories.map((category) => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            <span>Level</span>
+            <select
+              onChange={(event) => updateFilter('level', event.target.value)}
+              value={filters.level}
+            >
+              <option value="">All Levels</option>
+              {filterOptions.levels.map((level) => (
+                <option key={level} value={level}>{formatLevelLabel(level)}</option>
+              ))}
+            </select>
+          </label>
         </div>
 
         {loading ? (
@@ -89,7 +147,7 @@ export default function QuizLibraryPage() {
             )}
           </>
         ) : (
-          <div className="dashboard-state-card">No active concepts found right now.</div>
+          <div className="dashboard-state-card">No active concepts match these filters right now.</div>
         )}
       </section>
     </div>

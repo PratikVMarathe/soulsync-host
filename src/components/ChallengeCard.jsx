@@ -18,10 +18,15 @@ function getDisplayTitle(title) {
   return (title || 'Concept').replace(/^Concept\s+\d+\s*:\s*/i, '');
 }
 
+function getImageUrl(quiz) {
+  return quiz?.imageUrl || '/images/home_page_meditation.png';
+}
+
 export default function ChallengeCard({ quiz }) {
   const navigate = useNavigate();
   const themeClass = themeMap[quiz?.slug] || themeMap[quiz?.category] || 'is-forest';
-  const questionCount = quiz?.questions?.length || 0;
+  const displayTitle = getDisplayTitle(quiz?.title);
+  const questionCount = quiz?.totalQuestions || quiz?.questions?.length || 0;
   const quizPathKey = quiz?.slug || quiz?.id;
   const timeLabel = quiz?.timeLimitLabel
     || quiz?.time
@@ -30,6 +35,10 @@ export default function ChallengeCard({ quiz }) {
 
   return (
     <article className={`challenge-card ${themeClass}`}>
+      {/* <div className="challenge-card-image">
+        <img alt={quiz?.imageAlt || `${displayTitle} concept visual`} src={getImageUrl(quiz)} />
+      </div> */}
+
       <div className="challenge-card-header">
         <span className="challenge-card-chip">{formatLevelLabel(quiz?.level)}</span>
         <span className="challenge-card-time">
@@ -39,7 +48,7 @@ export default function ChallengeCard({ quiz }) {
       </div>
 
       <div className="challenge-card-body">
-        <h3>{getDisplayTitle(quiz?.title)}</h3>
+        <h3>{displayTitle}</h3>
         <p>{quiz?.description}</p>
       </div>
 
