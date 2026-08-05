@@ -33,14 +33,34 @@ export default function ChallengeCard({ quiz }) {
     || (quiz?.estimatedTime ? formatEstimatedTime(quiz.estimatedTime) : null)
     || (quiz?.estimatedMinutes ? `${quiz.estimatedMinutes} min` : '1 min');
 
+  const attemptStatus = quiz?.userAttempt?.status || 'NOT_STARTED';
+  const isResume = attemptStatus === 'IN_PROGRESS';
+  const isCompletedNoRetake = attemptStatus === 'COMPLETED_NO_RETAKE';
+  const isCompleted = attemptStatus === 'COMPLETED' || isCompletedNoRetake;
+
+  let buttonLabel = 'Start Concept';
+  if (isResume) buttonLabel = 'Resume Concept';
+  else if (isCompletedNoRetake) buttonLabel = 'Completed';
+  else if (isCompleted) buttonLabel = 'Retake Concept';
+
   return (
     <article className={`challenge-card ${themeClass}`}>
-      {/* <div className="challenge-card-image">
+      <div className="challenge-card-image">
         <img alt={quiz?.imageAlt || `${displayTitle} concept visual`} src={getImageUrl(quiz)} />
-      </div> */}
+      </div>
 
       <div className="challenge-card-header">
         <span className="challenge-card-chip">{formatLevelLabel(quiz?.level)}</span>
+        {isResume && (
+          <span className="challenge-card-chip" style={{ backgroundColor: '#ff9800', color: '#ffffff' }}>
+            In Progress
+          </span>
+        )}
+        {isCompleted && (
+          <span className="challenge-card-chip" style={{ backgroundColor: '#4caf50', color: '#ffffff' }}>
+            Completed
+          </span>
+        )}
         <span className="challenge-card-time">
           <AppIcon name="question" size={14} />
           {questionCount} Questions
@@ -65,12 +85,14 @@ export default function ChallengeCard({ quiz }) {
 
       <button
         className="challenge-card-action"
+        disabled={isCompletedNoRetake}
         onClick={() => navigate(`/quiz/${quizPathKey}`)}
         type="button"
       >
-        <span>Start Concept</span>
-        <AppIcon name="arrow" size={16} />
+        <span>{buttonLabel}</span>
+        <AppIcon name={isCompletedNoRetake ? 'check' : 'arrow'} size={16} />
       </button>
     </article>
   );
 }
+

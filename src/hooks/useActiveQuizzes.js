@@ -2,7 +2,7 @@ import { startTransition, useEffect, useState } from 'react';
 import { resolveAppErrorState } from '../utils/resolveAppErrorState';
 import { loadAvailableQuizzes } from '../services/quizCatalogService';
 
-export function useActiveQuizzes() {
+export function useActiveQuizzes(user = null) {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export function useActiveQuizzes() {
       setLoading(true);
 
       try {
-        const quizData = await loadAvailableQuizzes();
+        const quizData = await loadAvailableQuizzes(user?.uid || null);
 
         startTransition(() => {
           setQuizzes(quizData);
@@ -37,7 +37,8 @@ export function useActiveQuizzes() {
     };
 
     fetchQuizzes();
-  }, [reloadToken]);
+  }, [reloadToken, user?.uid]);
+
 
   return {
     retry: () => setReloadToken((currentToken) => currentToken + 1),

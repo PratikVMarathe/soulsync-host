@@ -532,7 +532,7 @@ button {
   z-index: 1;
 }
 
-.landing-trust > span {
+.landing-trust>span {
   color: var(--soul-muted);
   text-align: center;
 }
@@ -856,6 +856,7 @@ button {
 }
 
 .app-layout-main {
+  align-content: center;
   flex: 1;
   padding: 0 2rem 2rem;
 }
@@ -1105,7 +1106,7 @@ button {
 }
 
 .challenge-card.is-forest {
-  background: linear-gradient(300deg, #d7e5d5  0%, #45775f 100%);
+  background: linear-gradient(300deg, #d7e5d5 0%, #45775f 100%);
   color: #fff;
 }
 
@@ -1919,5 +1920,559 @@ button {
 
   .profile-badge-row {
     justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   SATSANG CENTRAL & HARI SMRITI MANDALA STYLES
+   ========================================================================== */
+
+.satsang-central-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  position: relative;
+  width: 100%;
+}
+
+.satsang-central-hero {
+  background: linear-gradient(135deg, rgba(25, 53, 48, 0.06) 0%, rgba(245, 158, 11, 0.08) 100%);
+  border: 1px solid rgba(25, 53, 48, 0.1);
+  border-radius: 1.5rem;
+  padding: 2.2rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.satsang-central-hero h1 {
+  color: var(--soul-green-deep, #142e29);
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 0.75rem 0;
+}
+
+.satsang-central-hero p {
+  color: var(--soul-muted, #556360);
+  font-size: 1.05rem;
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.satsang-badge {
+  align-items: center;
+  background: #fef3c7;
+  border-radius: 999px;
+  color: #b45309;
+  display: inline-flex;
+  font-size: 0.85rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+}
+
+/* 3-Second Timer Back Button Styling */
+@keyframes satsangFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes satsangSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.satsang-back-btn-desktop {
+  align-items: center;
+  animation: satsangFadeIn 0.4s ease-out forwards;
+  background: var(--soul-green-deep, #142e29);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  position: fixed;
+  right: 2.5rem;
+  top: 7rem;
+  transition: all 0.2s ease;
+  z-index: 45;
+}
+
+.satsang-back-btn-desktop:hover {
+  background: #1d4039;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.satsang-back-btn-mobile {
+  display: none;
+}
+
+/* Category Section */
+.satsang-sections-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.satsang-category-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.satsang-category-header {
+  align-items: center;
+  display: flex;
+  gap: 0.6rem;
+}
+
+.satsang-category-header h2 {
+  color: var(--soul-green-deep, #142e29);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.satsang-count-chip {
+  background: rgba(25, 53, 48, 0.08);
+  border-radius: 999px;
+  color: var(--soul-green-deep, #142e29);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+}
+
+/* Cards Grid */
+.satsang-cards-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.satsang-card {
+  background: #ffffff;
+  border: 1px solid rgba(25, 53, 48, 0.1);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.satsang-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+.satsang-card-image {
+  height: 11rem;
+  overflow: hidden;
+  width: 100%;
+}
+
+.satsang-card-image img {
+  display: block;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  width: 100%;
+}
+
+.satsang-card:hover .satsang-card-image img {
+  transform: scale(1.04);
+}
+
+.satsang-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.75rem;
+  padding: 1.25rem;
+}
+
+.satsang-card-category-tag {
+  align-self: flex-start;
+  background: #e0f2fe;
+  border-radius: 0.4rem;
+  color: #0369a1;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
+  text-transform: uppercase;
+}
+
+.satsang-card-title {
+  color: var(--soul-green-deep, #142e29);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.satsang-card-desc {
+  color: var(--soul-muted, #556360);
+  font-size: 0.925rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.satsang-card-meta {
+  border-top: 1px solid rgba(25, 53, 48, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.satsang-meta-item {
+  align-items: center;
+  color: #64748b;
+  display: flex;
+  font-size: 0.85rem;
+  gap: 0.45rem;
+}
+
+.satsang-meta-item a {
+  color: #0284c7;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.satsang-card-actions {
+  margin-top: 0.5rem;
+}
+
+.satsang-btn-interest {
+  align-items: center;
+  background: var(--soul-green-deep, #142e29);
+  border: none;
+  border-radius: 0.75rem;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  transition: background 0.2s ease, transform 0.15s ease;
+  width: 100%;
+}
+
+.satsang-btn-interest:hover {
+  background: #1c3d36;
+  transform: scale(1.01);
+}
+
+/* Modal Styling */
+.satsang-modal-backdrop {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1rem;
+  position: fixed;
+  z-index: 100;
+}
+
+.satsang-modal-dialog {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+  overflow: hidden;
+  padding: 2rem;
+  position: relative;
+  width: 100%;
+}
+
+.satsang-modal-close {
+  background: rgba(0, 0, 0, 0.05);
+  border: none;
+  border-radius: 50%;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  height: 2.2rem;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 1.25rem;
+  top: 1.25rem;
+  width: 2.2rem;
+  transition: background 0.2s;
+}
+
+.satsang-modal-close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
+.satsang-modal-header {
+  margin-bottom: 1.25rem;
+}
+
+.satsang-modal-badge {
+  background: #fef3c7;
+  border-radius: 0.35rem;
+  color: #b45309;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.satsang-modal-header h2 {
+  color: var(--soul-green-deep, #142e29);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.25rem 0;
+}
+
+.satsang-modal-header p {
+  color: var(--soul-muted, #556360);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.satsang-interest-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.satsang-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.satsang-form-group label {
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.satsang-required {
+  color: #e53e3e;
+}
+
+.satsang-form-group input,
+.satsang-form-group textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  font-size: 0.925rem;
+  padding: 0.65rem 0.85rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.satsang-form-group input:focus,
+.satsang-form-group textarea:focus {
+  border-color: var(--soul-green-deep, #142e29);
+  box-shadow: 0 0 0 3px rgba(20, 46, 41, 0.12);
+  outline: none;
+}
+
+.satsang-form-group input:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.satsang-form-group input.is-invalid {
+  border-color: #e53e3e !important;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15) !important;
+}
+
+.satsang-field-error {
+  color: #e53e3e;
+  font-size: 0.825rem;
+  font-weight: 600;
+  margin-top: 0.2rem;
+}
+
+.satsang-input-help {
+  color: #94a3b8;
+  font-size: 0.775rem;
+}
+
+.satsang-form-alert {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.6rem;
+  color: #991b1b;
+  font-size: 0.875rem;
+  padding: 0.75rem;
+}
+
+.satsang-modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.satsang-btn-primary {
+  background: var(--soul-green-deep, #142e29);
+  border: none;
+  border-radius: 0.6rem;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  transition: background 0.2s;
+}
+
+.satsang-btn-primary:hover:not(:disabled) {
+  background: #1c3d36;
+}
+
+.satsang-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.satsang-btn-secondary {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.6rem;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  transition: background 0.2s;
+}
+
+.satsang-btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Success Modal View */
+.satsang-success-view {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.satsang-success-icon {
+  align-items: center;
+  background: #dcfce7;
+  border-radius: 50%;
+  color: #166534;
+  display: flex;
+  height: 4rem;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  width: 4rem;
+}
+
+.satsang-success-view h2 {
+  color: var(--soul-green-deep, #142e29);
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+}
+
+.satsang-success-view p {
+  color: #334155;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.satsang-success-sub {
+  color: var(--soul-muted, #556360) !important;
+  font-weight: 400 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Media Queries for Tablet & Mobile Layout Adaptations */
+@media (max-width: 1024px) {
+  .satsang-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .satsang-btn-interest .satsang-btn-label {
+    display: inline;
+  }
+}
+
+@media (max-width: 640px) {
+  .satsang-central-page {
+    padding: 1rem 1rem 5rem 1rem;
+  }
+
+  .satsang-central-hero {
+    padding: 1.5rem 1rem;
+  }
+
+  .satsang-central-hero h1 {
+    font-size: 1.75rem;
+  }
+
+  .satsang-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .satsang-back-btn-desktop {
+    display: none;
+  }
+
+  .satsang-back-btn-mobile {
+    align-items: center;
+    animation: satsangSlideUp 0.4s ease-out forwards;
+    background: var(--soul-green-deep, #142e29);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.2);
+    color: #ffffff;
+    cursor: pointer;
+    display: flex;
+    font-size: 0.875rem;
+    font-weight: 600;
+    gap: 0.5rem;
+    justify-content: center;
+    left: 1rem;
+    padding: 0.75rem 1.25rem;
+    position: fixed;
+    bottom: 4.8rem;
+    right: 1rem;
+    transition: all 0.2s ease;
+    z-index: 45;
   }
 }

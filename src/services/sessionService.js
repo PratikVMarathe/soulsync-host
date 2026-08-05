@@ -400,6 +400,30 @@ export const updateCurrentUserProfile = async ({ name, phoneNumber }) => {
     ? buildIdentityDocumentId(IDENTITY_TYPES.PHONE, nextPhone)
     : null;
 
+  // ─── Phase 1: Pre-read phone lock OUTSIDE the transaction ─────────────────
+  // Reading identityLocks inside a Firestore transaction causes the SDK to
+  // issue a batchGet request that includes identityLocks documents. Regular
+  // users do not have broad read permission on identityLocks, which returns
+  // a 403. Fix: read the phone lock with a plain getDoc() before the
+  // transaction, validate ownership, then only write inside the transaction.
+  let existingLock = null;
+  if (phoneLockDocumentId && wantsToSetPhone) {
+    const phoneLockReference = getIdentityLockReference(phoneLockDocumentId);
+    const phoneLockSnapshot = await getDoc(phoneLockReference);
+    existingLock = phoneLockSnapshot.exists() ? phoneLockSnapshot.data() : null;
+
+    if (existingLock && existingLock.uid && existingLock.uid !== authUser.uid) {
+      throw new SessionAccessError('PHONE_IN_USE', ACCESS_DENIED_MESSAGES.PHONE_IN_USE);
+    }
+
+    if (existingLock && !existingLock.uid) {
+      throw new SessionAccessError('PHONE_IN_USE', ACCESS_DENIED_MESSAGES.PHONE_IN_USE);
+    }
+  }
+
+  // ─── Phase 2: Write-only transaction ──────────────────────────────────────
+  // Only the user document is re-read inside the transaction (Firestore needs
+  // this to detect write conflicts). No identityLocks read here.
   await runTransaction(db, async (transaction) => {
     const snapshot = await transaction.get(userReference);
     if (!snapshot.exists()) {
@@ -411,19 +435,8 @@ export const updateCurrentUserProfile = async ({ name, phoneNumber }) => {
 
     validateUserAccess(snapshot.data());
 
-    if (phoneLockDocumentId) {
+    if (phoneLockDocumentId && wantsToSetPhone) {
       const phoneLockReference = getIdentityLockReference(phoneLockDocumentId);
-      const phoneLockSnapshot = await transaction.get(phoneLockReference);
-      const existingLock = phoneLockSnapshot.exists() ? phoneLockSnapshot.data() : null;
-
-      if (existingLock && existingLock.uid && existingLock.uid !== authUser.uid) {
-        throw new SessionAccessError('PHONE_IN_USE', ACCESS_DENIED_MESSAGES.PHONE_IN_USE);
-      }
-
-      if (existingLock && !existingLock.uid) {
-        throw new SessionAccessError('PHONE_IN_USE', ACCESS_DENIED_MESSAGES.PHONE_IN_USE);
-      }
-
       transaction.set(
         phoneLockReference,
         buildIdentityLockPayload({
@@ -451,6 +464,7 @@ export const updateCurrentUserProfile = async ({ name, phoneNumber }) => {
 
   return resolveAuthSession(authUser);
 };
+
 
 export const safeSignOut = async () => {
   await signOut(auth);
