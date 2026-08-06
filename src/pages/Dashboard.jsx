@@ -45,7 +45,7 @@ function getFirstName(user) {
 export default function Dashboard({ user }) {
   const navigate = useNavigate();
   const { showNotice } = useAppNotice();
-  const { quizzes, loading, error, retry } = useActiveQuizzes();
+  const { quizzes, loading, error, retry } = useActiveQuizzes(user);
   const previewQuizzes = quizzes.slice(0, 3);
 
   useEffect(() => {

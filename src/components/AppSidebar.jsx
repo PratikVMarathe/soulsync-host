@@ -6,6 +6,7 @@ const navigationItems = [
   { key: 'home', label: 'Home', icon: 'home', route: '/', section: 'dashboard-top' },
   { key: 'learn', label: 'Learn', icon: 'book', route: '/', section: 'continue-learning' },
   { key: 'quiz', label: 'Quiz', icon: 'question', route: '/quiz' },
+  { key: 'mandala', label: 'Satsang', icon: 'lotus', route: '/satsang-central' },
   { key: 'guide', label: 'AI Guide', icon: 'message', route: '/', section: 'ai-guide-panel' },
   // { key: 'bookmarks', label: 'Bookmarks', icon: 'bookmark', route: '/', section: 'continue-learning' },
   { key: 'progress', label: 'Progress', icon: 'levels', route: '/', section: 'progress-overview' },
@@ -13,9 +14,9 @@ const navigationItems = [
 
 const mobileItems = [
   navigationItems[0],
-  navigationItems[1],
   navigationItems[2],
   navigationItems[3],
+  navigationItems[4],
   { key: 'profile', label: 'Profile', icon: 'profile', route: '/profile' },
 ];
 
@@ -39,7 +40,9 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
     ? 'profile'
     : location.pathname.startsWith('/quiz')
       ? 'quiz'
-      : 'home';
+      : location.pathname.startsWith('/satsang-central')
+        ? 'mandala'
+        : 'home';
 
   const scrollToSection = (section) => {
     if (section === 'dashboard-top') {

@@ -7,8 +7,8 @@ import { formatLevelLabel } from '../utils/identity';
 
 const QUIZZES_PER_PAGE = 6;
 
-export default function QuizLibraryPage() {
-  const { quizzes, loading, error, retry } = useActiveQuizzes();
+export default function QuizLibraryPage({ user = null }) {
+  const { quizzes, loading, error, retry } = useActiveQuizzes(user);
   const [filters, setFilters] = useState({
     category: '',
     level: '',

@@ -21,6 +21,7 @@ import LandingPage from './pages/LandingPage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProfilePage from './pages/ProfilePage';
 import QuizLibraryPage from './pages/QuizLibraryPage';
+import SatsangCentralPage from './pages/SatsangCentralPage';
 import {
   getAuthErrorMessage,
   resolveAuthSession,
@@ -62,7 +63,7 @@ function QuizWrapper({ user }) {
   return (
     <QuizWidget
       isEmbedded
-      onExit={() => navigate('/')}
+      onExit={() => navigate('/satsang-central')}
       quizId={quizId}
       user={user}
     />
@@ -106,10 +107,18 @@ function UserShell({ onUserChange, user }) {
               <Route
                 element={(
                   <UserRoleGuard user={user}>
-                    <QuizLibraryPage />
+                    <QuizLibraryPage user={user} />
                   </UserRoleGuard>
                 )}
                 path="/quiz"
+              />
+              <Route
+                element={(
+                  <UserRoleGuard user={user}>
+                    <SatsangCentralPage onUserChange={onUserChange} user={user} />
+                  </UserRoleGuard>
+                )}
+                path="/satsang-central"
               />
               <Route
                 element={
