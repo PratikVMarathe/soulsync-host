@@ -83,15 +83,36 @@ export default function ChallengeCard({ quiz }) {
         </span>
       </div>
 
-      <button
-        className="challenge-card-action"
-        disabled={isCompletedNoRetake}
-        onClick={() => navigate(`/quiz/${quizPathKey}`)}
-        type="button"
-      >
-        <span>{buttonLabel}</span>
-        <AppIcon name={isCompletedNoRetake ? 'check' : 'arrow'} size={16} />
-      </button>
+      <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+        <button
+          className="challenge-card-action"
+          disabled={isCompletedNoRetake}
+          onClick={() => navigate(`/quiz/${quizPathKey}`)}
+          type="button"
+          style={{ flex: 1 }}
+        >
+          <span>{buttonLabel}</span>
+          <AppIcon name={isCompletedNoRetake ? 'check' : 'arrow'} size={16} />
+        </button>
+
+        <button
+          className="challenge-card-action"
+          disabled={!isCompleted}
+          onClick={() => navigate(`/quiz/${quizPathKey}?view=history`)}
+          type="button"
+          style={{ 
+            flex: 1, 
+            backgroundColor: 'transparent', 
+            color: 'inherit', 
+            border: '1px solid currentColor',
+            opacity: isCompleted ? 1 : 0.5
+          }}
+          title={isCompleted ? "View History" : "No history available"}
+        >
+          <span>History</span>
+          <AppIcon name="clock" size={16} />
+        </button>
+      </div>
     </article>
   );
 }
