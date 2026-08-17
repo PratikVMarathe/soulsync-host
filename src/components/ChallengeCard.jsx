@@ -50,7 +50,7 @@ export default function ChallengeCard({ quiz }) {
       </div>
 
       <div className="challenge-card-header">
-        <span className="challenge-card-chip">{formatLevelLabel(quiz?.level)}</span>
+        <span className="challenge-card-chip" style={{border:'1px solid'}}>{formatLevelLabel(quiz?.level)}</span>
         {isResume && (
           <span className="challenge-card-chip" style={{ backgroundColor: '#ff9800', color: '#ffffff' }}>
             In Progress
@@ -61,9 +61,9 @@ export default function ChallengeCard({ quiz }) {
             Completed
           </span>
         )}
-        <span className="challenge-card-time">
+        <span className="challenge-card-time" style={{border:'1px solid'}}>
           <AppIcon name="question" size={14} />
-          {questionCount} Questions
+          {questionCount} Ques
         </span>
       </div>
 
@@ -73,11 +73,11 @@ export default function ChallengeCard({ quiz }) {
       </div>
 
       <div className="challenge-card-meta">
-        <span>
+        <span className="challenge-card-meta-icon">
           <AppIcon name="lotus" size={15} />
           {quiz?.category || 'Wisdom'}
         </span>
-        <span>
+        <span className="challenge-card-meta-icon">
           <AppIcon name="fire" size={15} />
           {timeLabel}
         </span>
@@ -105,7 +105,7 @@ export default function ChallengeCard({ quiz }) {
             backgroundColor: 'transparent', 
             color: 'inherit', 
             border: '1px solid currentColor',
-            opacity: isCompleted ? 1 : 0.5
+            opacity: isCompleted ? 1 : 0.5,
           }}
           title={isCompleted ? "View History" : "No history available"}
         >

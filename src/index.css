@@ -445,6 +445,7 @@ button {
   background: var(--soul-green-deep);
   color: rgba(255, 255, 255, 0.94);
   transform: translateY(-1px);
+  border: 1px solid;
 }
 
 .secondary-cta {
@@ -1106,7 +1107,7 @@ button {
 }
 
 .challenge-card.is-forest {
-  background: linear-gradient(300deg, #d7e5d5 0%, #45775f 100%);
+  background: linear-gradient(184deg, #94a780 15%, #20483b 66%50%);
   color: #fff;
 }
 
@@ -1145,6 +1146,13 @@ button {
   justify-content: space-between;
   position: relative;
   z-index: 1;
+}
+
+.challenge-card-meta-icon{
+      align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+    justify-items: center;
 }
 
 .challenge-card-chip,
@@ -1205,9 +1213,10 @@ button {
   border: 0;
   color: var(--soul-green-deep);
   gap: 0.55rem;
-  min-height: 3.1rem;
+  min-height: 4.1rem;
   position: relative;
   z-index: 1;
+  padding: 0 1rem;
 }
 
 .dashboard-state-card,
@@ -1286,6 +1295,12 @@ button {
 .progress-strip span {
   color: var(--soul-muted);
   margin-top: 0.3rem;
+}
+
+@media (max-width: 640px) {
+  .progress-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .quiz-library-page {
@@ -1680,8 +1695,7 @@ button {
   .learning-grid,
   .challenge-grid,
   .challenge-grid.is-home-preview,
-  .quiz-library-grid,
-  .progress-strip {
+  .quiz-library-grid{
     grid-template-columns: 1fr;
   }
 

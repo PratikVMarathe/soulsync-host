@@ -98,7 +98,7 @@ export default function Dashboard({ user }) {
         </article>
       </section>
 
-      <section className="dashboard-section" id="continue-learning">
+      {/* <section className="dashboard-section" id="continue-learning">
         <div className="section-heading">
           <div>
             <h2>Continue Learning</h2>
@@ -127,7 +127,7 @@ export default function Dashboard({ user }) {
             </article>
           ))}
         </div>
-      </section>
+      </section> */}
 
       <section className="dashboard-section" id="active-challenges">
         <div className="section-heading">
