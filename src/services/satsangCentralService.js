@@ -15,6 +15,8 @@ import {
   normalizePhoneNumber,
 } from '../utils/identity';
 
+import { normalizeSocialLinks } from '../constants/socialMedia';
+
 const SATSANG_COLLECTION = 'satsangCentral';
 const INTEREST_REQUESTS_COLLECTION = 'interestRequests';
 const IDENTITY_LOCKS_COLLECTION = 'identityLocks';
@@ -26,10 +28,14 @@ export async function loadActiveSatsangOpportunities() {
   const activeQuery = query(satsangRef, where('status', '==', 'ACTIVE'));
   const querySnapshot = await getDocs(activeQuery);
 
-  const opportunities = querySnapshot.docs.map((docSnap) => ({
-    id: docSnap.id,
-    ...docSnap.data(),
-  }));
+  const opportunities = querySnapshot.docs.map((docSnap) => {
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      ...data,
+      socialLinks: normalizeSocialLinks(data.socialLinks),
+    };
+  });
 
   // Sort by startAt or createdAt desc
   return opportunities.sort((a, b) => {
@@ -37,6 +43,22 @@ export async function loadActiveSatsangOpportunities() {
     const timeB = b.startAt?.seconds || b.createdAt?.seconds || 0;
     return timeB - timeA;
   });
+}
+
+export async function loadUserInterestRequests(userId) {
+  if (!userId) return [];
+  try {
+    const requestsRef = collection(db, INTEREST_REQUESTS_COLLECTION);
+    const userQuery = query(requestsRef, where('userId', '==', userId));
+    const querySnapshot = await getDocs(userQuery);
+    return querySnapshot.docs.map((docSnap) => ({
+      id: docSnap.id,
+      ...docSnap.data(),
+    }));
+  } catch (err) {
+    console.error('Failed to load user interest requests:', err);
+    return [];
+  }
 }
 
 export async function submitInterestRequest({

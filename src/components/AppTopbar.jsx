@@ -35,11 +35,6 @@ export default function AppTopbar({ user, isSidebarExpanded = false }) {
       </div>
 
       <div className="app-topbar-actions">
-        <div className="app-chip">
-          <AppIcon name="fire" size={16} />
-          <span>7 Day Streak</span>
-        </div>
-
         <button
           className="app-icon-button"
           onClick={() => showNotice(FEATURE_MESSAGES.NOTIFICATIONS)}
@@ -53,7 +48,7 @@ export default function AppTopbar({ user, isSidebarExpanded = false }) {
           className="app-user-pill app-user-pill-link"
           to="/profile"
         >
-            <span className="app-user-fallback">{initials}</span>
+          <span className="app-user-fallback">{initials}</span>
         </Link>
 
         <button className="app-ghost-button" onClick={() => signOut(auth)} type="button">
