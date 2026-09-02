@@ -67,16 +67,22 @@ export async function submitInterestRequest({
   name,
   email,
   phoneNumber,
+  age,
+  passion,
+  institutionName,
+  mode,
+  language,
+  preferredDay,
   description = '',
 }) {
   if (!user || !user.uid) {
     throw new Error('User authentication required.');
   }
 
-  const cleanName = name.trim();
-  const cleanEmail = email.trim();
+  const cleanName = name?.trim() || '';
+  const cleanEmail = email?.trim() || '';
   const cleanPhone = normalizePhoneNumber(phoneNumber);
-  const cleanDesc = description.trim();
+  const cleanDesc = description?.trim() || '';
 
   if (!cleanName) {
     throw new Error('Name is required.');
@@ -89,6 +95,42 @@ export async function submitInterestRequest({
   }
   if (!opportunity || !opportunity.id) {
     throw new Error('Opportunity selection required.');
+  }
+
+  const parsedAge = parseInt(age, 10);
+  if (Number.isNaN(parsedAge) || parsedAge <= 0) {
+    throw new Error('Please enter a valid age.');
+  }
+
+  const normalizedPassion = (passion || '').toUpperCase().trim();
+  if (!['STUDENT', 'PROFESSIONAL', 'OTHER'].includes(normalizedPassion)) {
+    throw new Error('Please select a valid option for passion.');
+  }
+
+  const cleanInstitutionName = (institutionName || '').trim();
+  if (!cleanInstitutionName) {
+    if (normalizedPassion === 'STUDENT') {
+      throw new Error('College / Institution Name is required.');
+    }
+    if (normalizedPassion === 'PROFESSIONAL') {
+      throw new Error('Organization / Company Name is required.');
+    }
+    throw new Error('Please provide what best describes you.');
+  }
+
+  const normalizedMode = (mode || '').toUpperCase().trim();
+  if (!['ONLINE', 'OFFLINE'].includes(normalizedMode)) {
+    throw new Error('Please select a valid mode (Online or Offline).');
+  }
+
+  const normalizedLanguage = (language || '').toUpperCase().trim();
+  if (!['ENGLISH', 'HINDI'].includes(normalizedLanguage)) {
+    throw new Error('Please select a valid preferred language (English or Hindi).');
+  }
+
+  const normalizedDay = (preferredDay || '').toUpperCase().trim();
+  if (!normalizedDay) {
+    throw new Error('Please select your preferred day.');
   }
 
   const userRef = doc(db, USERS_COLLECTION, user.uid);
@@ -171,7 +213,7 @@ export async function submitInterestRequest({
       };
     }
 
-    // Save the interest request document
+    // Save the flat interest request document
     transaction.set(interestRequestRef, {
       userId: user.uid,
       satsangCentralId: opportunity.id,
@@ -180,9 +222,16 @@ export async function submitInterestRequest({
       name: cleanName,
       email: cleanEmail,
       phoneNumber: cleanPhone,
+      age: parsedAge,
+      passion: normalizedPassion,
+      institutionName: cleanInstitutionName,
+      mode: normalizedMode,
+      language: normalizedLanguage,
+      preferredDay: normalizedDay,
       description: cleanDesc,
       status: 'NEW',
       requestedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
 
     // Save the audit log

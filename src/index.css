@@ -1148,11 +1148,11 @@ button {
   z-index: 1;
 }
 
-.challenge-card-meta-icon{
-      align-items: center;
-    display: inline-flex;
-    gap: 0.5rem;
-    justify-items: center;
+.challenge-card-meta-icon {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+  justify-items: center;
 }
 
 .challenge-card-chip,
@@ -1695,7 +1695,7 @@ button {
   .learning-grid,
   .challenge-grid,
   .challenge-grid.is-home-preview,
-  .quiz-library-grid{
+  .quiz-library-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2386,11 +2386,33 @@ button {
   background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 2.5rem);
   max-width: 480px;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 2rem;
   position: relative;
   width: 100%;
+}
+
+.satsang-modal-dialog::-webkit-scrollbar {
+  width: 6px;
+}
+
+.satsang-modal-dialog::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.satsang-modal-dialog::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.satsang-modal-dialog::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .satsang-modal-close {
@@ -2465,9 +2487,13 @@ button {
 }
 
 .satsang-form-group input,
-.satsang-form-group textarea {
+.satsang-form-group textarea,
+.satsang-form-group select {
+  background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 0.6rem;
+  color: #1e293b;
+  font-family: inherit;
   font-size: 0.925rem;
   padding: 0.65rem 0.85rem;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -2475,10 +2501,68 @@ button {
 }
 
 .satsang-form-group input:focus,
-.satsang-form-group textarea:focus {
+.satsang-form-group textarea:focus,
+.satsang-form-group select:focus {
   border-color: var(--soul-green-deep, #142e29);
   box-shadow: 0 0 0 3px rgba(20, 46, 41, 0.12);
   outline: none;
+}
+
+/* Bhagavad Gita Prompt Modal */
+.satsang-prompt-modal-dialog {
+  max-width: 480px;
+  text-align: center;
+  padding: 2rem 1.75rem;
+}
+
+.satsang-prompt-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.satsang-prompt-badge {
+  align-items: center;
+  background: rgba(20, 46, 41, 0.08);
+  border-radius: 999px;
+  color: var(--soul-green-deep, #142e29);
+  display: inline-flex;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.satsang-prompt-content h2 {
+  color: var(--soul-green-deep, #142e29);
+  font-size: 1.45rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.satsang-prompt-sub {
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.satsang-prompt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.satsang-prompt-actions button {
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  font-size: 0.95rem;
 }
 
 .satsang-form-group input:disabled {
@@ -2651,5 +2735,34 @@ button {
     right: 1rem;
     transition: all 0.2s ease;
     z-index: 45;
+  }
+
+  .satsang-modal-backdrop {
+    padding: 0.75rem;
+  }
+
+  .satsang-modal-dialog {
+    border-radius: 1rem;
+    max-height: calc(100dvh - 11.5rem);
+    padding: 1.5rem 1.15rem 1.25rem 1.15rem;
+  }
+
+  .satsang-modal-close {
+    right: 0.85rem;
+    top: 0.85rem;
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .satsang-modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .satsang-prompt-modal-dialog {
+    padding: 1.5rem 1.15rem;
+  }
+
+  .satsang-prompt-content h2 {
+    font-size: 1.25rem;
   }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import AppIcon from '../components/AppIcon';
 import { getActiveSocialLinks } from '../constants/socialMedia';
 import {
@@ -52,21 +52,36 @@ function formatTimestampRange(startAt, endAt) {
 
 export default function SatsangCentralPage({ onUserChange, user }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [opportunities, setOpportunities] = useState([]);
   const [userInterestedIds, setUserInterestedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showBackButton, setShowBackButton] = useState(false);
 
+  // Bhagavad Gita Prompt Modal (Triggered on Continue Your Journey from Quiz)
+  const [showGitaPrompt, setShowGitaPrompt] = useState(false);
+  const [gitaPromptOpportunity, setGitaPromptOpportunity] = useState(null);
+
   // Modals State
   const [activeOpportunity, setActiveOpportunity] = useState(null);
   const [viewDetailsOpportunity, setViewDetailsOpportunity] = useState(null);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phoneNumber: '',
+    age: '',
+    passion: 'STUDENT',
+    institutionName: '',
+    mode: 'ONLINE',
+    language: 'ENGLISH',
+    dayOption: 'SATURDAY',
+    customDay: '',
     description: '',
   });
+
   const [phoneError, setPhoneError] = useState('');
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,9 +102,20 @@ export default function SatsangCentralPage({ onUserChange, user }) {
         ]);
         if (!ignore) {
           setOpportunities(data);
-          if (userRequests) {
-            const interestedSet = new Set(userRequests.map((r) => r.satsangCentralId));
-            setUserInterestedIds(interestedSet);
+          const interestedSet = new Set((userRequests || []).map((r) => r.satsangCentralId));
+          setUserInterestedIds(interestedSet);
+
+          // Check for "Continue Your Journey" quiz flow
+          if (location.state?.fromQuizJourney) {
+            const classOpps = data.filter((o) => (o.category || '').toUpperCase() === 'CLASS');
+            const gitaOpp = classOpps.find((o) => (o.title || '').toLowerCase().includes('gita'))
+              || classOpps[0]
+              || data[0];
+
+            if (gitaOpp && !interestedSet.has(gitaOpp.id)) {
+              setGitaPromptOpportunity(gitaOpp);
+              setShowGitaPrompt(true);
+            }
           }
         }
       } catch (err) {
@@ -107,7 +133,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
     return () => {
       ignore = true;
     };
-  }, [user?.uid]);
+  }, [location.state, user?.uid]);
 
   // 3-second timer for Back to Dashboard button
   useEffect(() => {
@@ -118,12 +144,28 @@ export default function SatsangCentralPage({ onUserChange, user }) {
     return () => clearTimeout(timer);
   }, []);
 
+  // Compute remaining days configured by admin (excluding Saturday & Sunday)
+  const otherConfiguredDays = useMemo(() => {
+    const configured = activeOpportunity?.classDetails?.availableDays || ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+    return configured.filter((d) => d !== 'SATURDAY' && d !== 'SUNDAY');
+  }, [activeOpportunity]);
+
   const handleOpenInterestModal = useCallback((opportunity) => {
     setActiveOpportunity(opportunity);
+    const configured = opportunity?.classDetails?.availableDays || ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
+    const otherDays = configured.filter((d) => d !== 'SATURDAY' && d !== 'SUNDAY');
+
     setFormData({
       name: user?.displayName || user?.name || '',
       email: user?.email || '',
       phoneNumber: user?.phoneNumber || '',
+      age: '',
+      passion: 'STUDENT',
+      institutionName: '',
+      mode: 'ONLINE',
+      language: 'ENGLISH',
+      dayOption: 'SATURDAY',
+      customDay: otherDays[0] || 'MONDAY',
       description: '',
     });
     setPhoneError('');
@@ -151,9 +193,39 @@ export default function SatsangCentralPage({ onUserChange, user }) {
     setPhoneError('');
     setFormError('');
 
+    const cleanName = formData.name.trim();
+    if (!cleanName) {
+      setFormError('Name is required.');
+      return;
+    }
+
     const cleanPhone = normalizePhoneNumber(formData.phoneNumber);
     if (!cleanPhone || cleanPhone.length !== 10) {
       setPhoneError('Please enter a valid 10-digit phone number.');
+      return;
+    }
+
+    const parsedAge = parseInt(formData.age, 10);
+    if (Number.isNaN(parsedAge) || parsedAge <= 0) {
+      setFormError('Please enter a valid positive age.');
+      return;
+    }
+
+    const cleanInstitution = formData.institutionName.trim();
+    if (!cleanInstitution) {
+      if (formData.passion === 'STUDENT') {
+        setFormError('College / Institution Name is required.');
+      } else if (formData.passion === 'PROFESSIONAL') {
+        setFormError('Organization / Company Name is required.');
+      } else {
+        setFormError('Please provide what best describes you.');
+      }
+      return;
+    }
+
+    const preferredDay = formData.dayOption === 'OTHER' ? formData.customDay : formData.dayOption;
+    if (!preferredDay) {
+      setFormError('Please select a preferred day.');
       return;
     }
 
@@ -163,9 +235,15 @@ export default function SatsangCentralPage({ onUserChange, user }) {
       const updatedUser = await submitInterestRequest({
         user,
         opportunity: activeOpportunity,
-        name: formData.name,
+        name: cleanName,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
+        age: parsedAge,
+        passion: formData.passion,
+        institutionName: cleanInstitution,
+        mode: formData.mode,
+        language: formData.language,
+        preferredDay,
         description: formData.description,
       });
 
@@ -262,7 +340,6 @@ export default function SatsangCentralPage({ onUserChange, user }) {
 
                     return (
                       <article className="satsang-card" key={opp.id}>
-                        {/* Flexible UI: Only show image container if imageUrl is present */}
                         {opp.imageUrl ? (
                           <div className="satsang-card-image">
                             <img
@@ -283,12 +360,10 @@ export default function SatsangCentralPage({ onUserChange, user }) {
 
                           <h3 className="satsang-card-title">{opp.title}</h3>
 
-                          {/* Flexible UI: Only render description if non-empty */}
                           {opp.description ? (
                             <p className="satsang-card-desc">{opp.description}</p>
                           ) : null}
 
-                          {/* Flexible UI: Details list - render date/time & location if present */}
                           {(timeRange || opp.location || opp.meetingLink) ? (
                             <div className="satsang-card-meta">
                               {timeRange ? (
@@ -306,7 +381,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                               ) : opp.meetingLink ? (
                                 <div className="satsang-meta-item">
                                   <AppIcon name="location" size={16} />
-                                  <a href={opp.meetingLink} target="_blank" rel="noopener noreferrer">
+                                  <a href={opp.meetingLink} rel="noopener noreferrer" target="_blank">
                                     Join Online Meeting
                                   </a>
                                 </div>
@@ -376,6 +451,47 @@ export default function SatsangCentralPage({ onUserChange, user }) {
           <span>Back to Dashboard</span>
         </button>
       )}
+
+      {/* Bhagavad Gita Interest Popup Dialog */}
+      {showGitaPrompt && gitaPromptOpportunity ? (
+        <div className="satsang-modal-backdrop">
+          <div
+            aria-modal="true"
+            className="satsang-modal-dialog satsang-prompt-modal-dialog"
+            role="dialog"
+          >
+            <div className="satsang-prompt-content">
+              <div className="satsang-prompt-badge">
+                <AppIcon name="spark" size={18} />
+                <span>Special Invitation</span>
+              </div>
+              <h2>We are having Bhagavad Gita Class,<br />Are you Interested</h2>
+              <p className="satsang-prompt-sub">
+                Join our weekly sessions to explore timeless Gita teachings for practical living.
+              </p>
+              <div className="satsang-prompt-actions">
+                <button
+                  className="satsang-btn-primary"
+                  onClick={() => {
+                    setShowGitaPrompt(false);
+                    handleOpenInterestModal(gitaPromptOpportunity);
+                  }}
+                  type="button"
+                >
+                  Yes, I&apos;m Interested
+                </button>
+                <button
+                  className="satsang-btn-secondary"
+                  onClick={() => setShowGitaPrompt(false)}
+                  type="button"
+                >
+                  No, Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* View Details Modal */}
       {viewDetailsOpportunity ? (
@@ -553,8 +669,11 @@ export default function SatsangCentralPage({ onUserChange, user }) {
 
                 {formError ? <div className="satsang-form-alert">{formError}</div> : null}
 
+                {/* 1. Name */}
                 <div className="satsang-form-group">
-                  <label htmlFor="interest-name">Name</label>
+                  <label htmlFor="interest-name">
+                    Name <span className="satsang-required">*</span>
+                  </label>
                   <input
                     id="interest-name"
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -564,20 +683,25 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   />
                 </div>
 
+                {/* 2. Email (Read-only) */}
                 <div className="satsang-form-group">
-                  <label htmlFor="interest-email">Email</label>
+                  <label htmlFor="interest-email">
+                    Email <span className="satsang-required">*</span>
+                  </label>
                   <input
                     disabled
                     id="interest-email"
+                    readOnly
                     type="email"
                     value={formData.email}
                   />
-                  <small className="satsang-input-help">Email cannot be changed.</small>
+                  <small className="satsang-input-help">Email is linked to your account and cannot be changed.</small>
                 </div>
 
+                {/* 3. Phone Number */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-phone">
-                    Phone Number {!hasPhoneInProfile ? <span className="satsang-required">*</span> : null}
+                    Phone Number <span className="satsang-required">*</span>
                   </label>
                   <input
                     className={phoneError ? 'is-invalid' : ''}
@@ -598,6 +722,148 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   )}
                 </div>
 
+                {/* 4. Age */}
+                <div className="satsang-form-group">
+                  <label htmlFor="interest-age">
+                    Age <span className="satsang-required">*</span>
+                  </label>
+                  <input
+                    id="interest-age"
+                    max="120"
+                    min="1"
+                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                    placeholder="e.g. 24"
+                    required
+                    type="number"
+                    value={formData.age}
+                  />
+                </div>
+
+                {/* 5. Passion */}
+                <div className="satsang-form-group">
+                  <label htmlFor="interest-passion">
+                    Passion <span className="satsang-required">*</span>
+                  </label>
+                  <select
+                    id="interest-passion"
+                    onChange={(e) => setFormData({ ...formData, passion: e.target.value })}
+                    required
+                    value={formData.passion}
+                  >
+                    <option value="STUDENT">Student</option>
+                    <option value="PROFESSIONAL">Professional</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                {/* 6. Conditional Institution/Organization/Description Field */}
+                <div className="satsang-form-group">
+                  <label htmlFor="interest-institution">
+                    {formData.passion === 'STUDENT'
+                      ? 'College / Institution Name *'
+                      : formData.passion === 'PROFESSIONAL'
+                        ? 'Organization / Company Name *'
+                        : 'What best describes you? *'}
+                  </label>
+                  <input
+                    id="interest-institution"
+                    onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
+                    placeholder={
+                      formData.passion === 'STUDENT'
+                        ? 'e.g. Pune University, IIT, COEP'
+                        : formData.passion === 'PROFESSIONAL'
+                          ? 'e.g. Infosys, TCS, Freelancer'
+                          : 'e.g. Retired teacher, Artist, Homemaker'
+                    }
+                    required
+                    type="text"
+                    value={formData.institutionName}
+                  />
+                </div>
+
+                {/* 7. Mode (Online / Offline only) */}
+                <div className="satsang-form-group">
+                  <label htmlFor="interest-mode">
+                    Mode <span className="satsang-required">*</span>
+                  </label>
+                  <select
+                    id="interest-mode"
+                    onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
+                    required
+                    value={formData.mode}
+                  >
+                    <option value="ONLINE">Online</option>
+                    <option value="OFFLINE">Offline</option>
+                  </select>
+                </div>
+
+                {/* 8. Preferred Language (English / Hindi only) */}
+                <div className="satsang-form-group">
+                  <label htmlFor="interest-language">
+                    Preferred Language <span className="satsang-required">*</span>
+                  </label>
+                  <select
+                    id="interest-language"
+                    onChange={(e) => setFormData({ ...formData, language: e.target.value })}
+                    required
+                    value={formData.language}
+                  >
+                    <option value="ENGLISH">English</option>
+                    <option value="HINDI">Hindi</option>
+                  </select>
+                </div>
+
+                {/* 9. Preferred Day (Saturday / Sunday / Other) */}
+                <div className="satsang-form-group">
+                  <label htmlFor="interest-day-option">
+                    Preferred Day <span className="satsang-required">*</span>
+                  </label>
+                  <select
+                    id="interest-day-option"
+                    onChange={(e) => {
+                      const newOption = e.target.value;
+                      setFormData({
+                        ...formData,
+                        dayOption: newOption,
+                        customDay: newOption === 'OTHER' ? (otherConfiguredDays[0] || 'MONDAY') : '',
+                      });
+                    }}
+                    required
+                    value={formData.dayOption}
+                  >
+                    <option value="SATURDAY">Saturday</option>
+                    <option value="SUNDAY">Sunday</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                {formData.dayOption === 'OTHER' ? (
+                  <div className="satsang-form-group">
+                    <label htmlFor="interest-custom-day">
+                      Select Available Day <span className="satsang-required">*</span>
+                    </label>
+                    {otherConfiguredDays.length > 0 ? (
+                      <select
+                        id="interest-custom-day"
+                        onChange={(e) => setFormData({ ...formData, customDay: e.target.value })}
+                        required
+                        value={formData.customDay}
+                      >
+                        {otherConfiguredDays.map((day) => (
+                          <option key={day} value={day}>
+                            {day.charAt(0) + day.slice(1).toLowerCase()}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="satsang-input-help">
+                        No additional days are configured beyond Saturday &amp; Sunday.
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* 10. Description (Optional) */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-desc">Description (Optional)</label>
                   <textarea

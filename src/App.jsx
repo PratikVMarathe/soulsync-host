@@ -60,10 +60,25 @@ function QuizWrapper({ user }) {
   const { quizId } = useParams();
   const navigate = useNavigate();
 
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/quiz');
+    }
+  };
+
+  const handleContinueJourney = () => {
+    navigate('/satsang-central', { state: { fromQuizJourney: true } });
+  };
+
   return (
     <QuizWidget
       isEmbedded
-      onExit={() => navigate('/satsang-central')}
+      onBack={handleBack}
+      onExit={handleBack}
+      onComplete={handleContinueJourney}
+      onReturn={handleContinueJourney}
       quizId={quizId}
       user={user}
     />

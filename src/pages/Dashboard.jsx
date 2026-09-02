@@ -155,7 +155,7 @@ export default function Dashboard({ user }) {
         )}
       </section>
 
-      <section className="dashboard-section" id="ai-guide-panel">
+      {/* <section className="dashboard-section" id="ai-guide-panel">
         <div className="section-heading">
           <div>
             <h2>AI Guide</h2>
@@ -193,7 +193,7 @@ export default function Dashboard({ user }) {
             <span>Active concepts</span>
           </article>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }
