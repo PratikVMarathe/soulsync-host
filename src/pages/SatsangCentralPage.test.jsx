@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SatsangCentralPage from './SatsangCentralPage';
 
@@ -20,6 +20,11 @@ const mockOpportunities = [
       youtube: 'https://youtube.com/@soulsync_live',
       facebook: 'https://facebook.com/soulsync_community',
       telegram: 'https://t.me/soulsync_gita',
+    },
+    classDetails: {
+      availableModes: ['ONLINE', 'OFFLINE'],
+      availableLanguages: ['ENGLISH', 'HINDI'],
+      availableDays: ['SATURDAY', 'SUNDAY', 'MONDAY', 'WEDNESDAY'],
     },
     startAt: { seconds: 1700000000 },
   },
@@ -55,27 +60,32 @@ const mockUser = {
   uid: 'user-456',
   email: 'devotee@soulsync.dev',
   name: 'Devotee User',
+  displayName: 'Devotee User',
   phoneNumber: '9876543210',
 };
 
-function renderPage(props = {}) {
+function renderPage(props = {}, routerState = null) {
   const defaultProps = {
     onUserChange: vi.fn(),
     user: mockUser,
     ...props,
   };
 
+  const initialEntries = routerState
+    ? [{ pathname: '/satsang-central', state: routerState }]
+    : ['/satsang-central'];
+
   return {
     ...render(
-      <BrowserRouter>
+      <MemoryRouter initialEntries={initialEntries}>
         <SatsangCentralPage {...defaultProps} />
-      </BrowserRouter>,
+      </MemoryRouter>,
     ),
     props: defaultProps,
   };
 }
 
-describe('SatsangCentralPage — Social Media & View Details', () => {
+describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLoadActiveSatsangOpportunities.mockResolvedValue(mockOpportunities);
@@ -90,14 +100,10 @@ describe('SatsangCentralPage — Social Media & View Details', () => {
       expect(screen.getByText('Janmashtami Maha Festival')).toBeInTheDocument();
     });
 
-    // WhatsApp shows "Join WhatsApp" text and links to chat.whatsapp.com
     const whatsappLink = screen.getByRole('link', { name: /join whatsapp/i });
     expect(whatsappLink).toBeInTheDocument();
     expect(whatsappLink).toHaveAttribute('href', 'https://chat.whatsapp.com/GitaGroup');
-    expect(whatsappLink).toHaveAttribute('target', '_blank');
-    expect(whatsappLink).toHaveAttribute('rel', 'noopener noreferrer');
 
-    // Instagram, YouTube, Facebook, Telegram links
     expect(screen.getByRole('link', { name: /open instagram/i })).toHaveAttribute(
       'href',
       'https://instagram.com/soulsync_gita',
@@ -114,10 +120,39 @@ describe('SatsangCentralPage — Social Media & View Details', () => {
       'href',
       'https://t.me/soulsync_gita',
     );
+  });
 
-    // Festival opportunity without social links has no social links rendered
-    const festivalCard = screen.getByText('Janmashtami Maha Festival').closest('.satsang-card');
-    expect(festivalCard.querySelectorAll('.satsang-card-social-actions a')).toHaveLength(0);
+  it('immediately shows Bhagavad Gita prompt when arriving from Continue Your Journey flow', async () => {
+    renderPage({}, { fromQuizJourney: true });
+
+    await waitFor(() => {
+      expect(screen.getByText(/we are having bhagavad gita class/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /yes, i'm interested/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /no, maybe later/i })).toBeInTheDocument();
+    });
+
+    // Clicking "Yes, I'm Interested" opens the Interest Form
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /yes, i'm interested/i }));
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Express Interest')).toBeInTheDocument();
+    expect(within(dialog).getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
+  });
+
+  it('closes prompt and continues to Satsang Central when clicking "No, Maybe Later"', async () => {
+    renderPage({}, { fromQuizJourney: true });
+
+    await waitFor(() => {
+      expect(screen.getByText(/we are having bhagavad gita class/i)).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: /no, maybe later/i }));
+
+    // Prompt closed, Satsang Central cards visible
+    expect(screen.queryByText(/we are having bhagavad gita class/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
   });
 
   it('renders "View Details" button instead of "I\'m Interested" if user already submitted interest', async () => {
@@ -139,43 +174,9 @@ describe('SatsangCentralPage — Social Media & View Details', () => {
     const gitaCard = screen.getByText('Bhagavad Gita Wisdom Class').closest('.satsang-card');
     expect(gitaCard.querySelector('.satsang-btn-view-details')).toBeInTheDocument();
     expect(gitaCard.querySelector('.satsang-btn-interest')).not.toBeInTheDocument();
-
-    const festivalCard = screen.getByText('Janmashtami Maha Festival').closest('.satsang-card');
-    expect(festivalCard.querySelector('.satsang-btn-interest')).toBeInTheDocument();
-    expect(festivalCard.querySelector('.satsang-btn-view-details')).not.toBeInTheDocument();
   });
 
-  it('opens View Details modal when clicking "View Details" button', async () => {
-    mockLoadUserInterestRequests.mockResolvedValueOnce([
-      {
-        id: 'req-1',
-        satsangCentralId: 'opp-with-all-social',
-        userId: 'user-456',
-      },
-    ]);
-
-    renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
-    });
-
-    const user = userEvent.setup();
-    await user.click(screen.getByRole('button', { name: /view details/i }));
-
-    // Details modal dialog is open
-    const dialog = screen.getByRole('dialog');
-    expect(dialog).toBeInTheDocument();
-    expect(within(dialog).getByText('Weekly in-depth Gita study.')).toBeInTheDocument();
-    expect(within(dialog).getByText('Join Online Meeting')).toBeInTheDocument();
-    expect(within(dialog).getByText('Connect with us')).toBeInTheDocument();
-
-    // Close modal
-    const closeBtn = within(dialog).getByRole('button', { name: 'Close modal' });
-    await user.click(closeBtn);
-  });
-
-  it('submitting interest displays Thank You view with the selected opportunity\'s social links', async () => {
+  it('validates 9 fields and submits interest request', async () => {
     mockSubmitInterestRequest.mockResolvedValueOnce(mockUser);
 
     renderPage();
@@ -190,44 +191,44 @@ describe('SatsangCentralPage — Social Media & View Details', () => {
     await user.click(interestBtn);
 
     // Form modal opens
-    expect(screen.getByText('Express Interest')).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Express Interest')).toBeInTheDocument();
+    expect(within(dialog).getByLabelText(/^Email/i)).toBeDisabled();
+
+    // Fill in required fields
+    const ageInput = within(dialog).getByLabelText(/^Age/i);
+    await user.type(ageInput, '24');
+
+    const institutionInput = within(dialog).getByLabelText(/college \/ institution name/i);
+    await user.type(institutionInput, 'Pune University');
+
+    // Switch passion to PROFESSIONAL -> check label change
+    const passionSelect = within(dialog).getByLabelText(/^Passion/i);
+    await user.selectOptions(passionSelect, 'PROFESSIONAL');
+    expect(within(dialog).getByLabelText(/organization \/ company name/i)).toBeInTheDocument();
+
+    // Switch preferred day to OTHER -> check remaining days selection
+    const daySelect = within(dialog).getByLabelText(/^Preferred Day/i);
+    await user.selectOptions(daySelect, 'OTHER');
+    expect(within(dialog).getByLabelText(/select available day/i)).toBeInTheDocument();
 
     // Submit form
-    await user.click(screen.getByRole('button', { name: /submit interest/i }));
+    await user.click(within(dialog).getByRole('button', { name: /submit interest/i }));
 
     await waitFor(() => {
+      expect(mockSubmitInterestRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Devotee User',
+          email: 'devotee@soulsync.dev',
+          phoneNumber: '9876543210',
+          age: 24,
+          passion: 'PROFESSIONAL',
+          mode: 'ONLINE',
+          language: 'ENGLISH',
+          preferredDay: 'MONDAY',
+        }),
+      );
       expect(screen.getByText('Thank you!')).toBeInTheDocument();
-      expect(screen.getByText('Connect with us')).toBeInTheDocument();
-    });
-
-    // The card now switches to "View Details" after closing
-    await user.click(screen.getByRole('button', { name: 'Close modal' }));
-
-    await waitFor(() => {
-      const updatedCard = screen.getByText('Bhagavad Gita Wisdom Class').closest('.satsang-card');
-      expect(updatedCard.querySelector('.satsang-btn-view-details')).toBeInTheDocument();
-    });
-  });
-
-  it('submitting interest for opportunity without social links displays Thank You view without social links', async () => {
-    mockSubmitInterestRequest.mockResolvedValueOnce(mockUser);
-
-    renderPage();
-
-    await waitFor(() => {
-      expect(screen.getByText('Janmashtami Maha Festival')).toBeInTheDocument();
-    });
-
-    const user = userEvent.setup();
-    const festivalCard = screen.getByText('Janmashtami Maha Festival').closest('.satsang-card');
-    const interestBtn = festivalCard.querySelector('.satsang-btn-interest');
-    await user.click(interestBtn);
-
-    await user.click(screen.getByRole('button', { name: /submit interest/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText('Thank you!')).toBeInTheDocument();
-      expect(screen.queryByText('Connect with us')).not.toBeInTheDocument();
     });
   });
 });

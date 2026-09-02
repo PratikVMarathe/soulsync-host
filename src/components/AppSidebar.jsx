@@ -7,7 +7,7 @@ const navigationItems = [
   // { key: 'learn', label: 'Learn', icon: 'book', route: '/', section: 'continue-learning' },
   { key: 'quiz', label: 'Quiz', icon: 'question', route: '/quiz' },
   { key: 'mandala', label: 'Satsang', icon: 'lotus', route: '/satsang-central' },
-  { key: 'guide', label: 'AI Guide', icon: 'message', route: '/', section: 'ai-guide-panel' },
+  // { key: 'guide', label: 'AI Guide', icon: 'message', route: '/', section: 'ai-guide-panel' },
   // { key: 'bookmarks', label: 'Bookmarks', icon: 'bookmark', route: '/', section: 'continue-learning' },
   // { key: 'progress', label: 'Progress', icon: 'levels', route: '/', section: 'progress-overview' },
 ];
@@ -16,7 +16,7 @@ const mobileItems = [
   navigationItems[0],
   navigationItems[1],
   navigationItems[2],
-  navigationItems[3],
+  // navigationItems[3],
   { key: 'profile', label: 'Profile', icon: 'profile', route: '/profile' },
 ];
 
