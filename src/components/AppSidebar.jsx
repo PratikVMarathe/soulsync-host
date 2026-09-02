@@ -9,7 +9,7 @@ const navigationItems = [
   { key: 'mandala', label: 'Satsang', icon: 'lotus', route: '/satsang-central' },
   { key: 'guide', label: 'AI Guide', icon: 'message', route: '/', section: 'ai-guide-panel' },
   // { key: 'bookmarks', label: 'Bookmarks', icon: 'bookmark', route: '/', section: 'continue-learning' },
-  { key: 'progress', label: 'Progress', icon: 'levels', route: '/', section: 'progress-overview' },
+  // { key: 'progress', label: 'Progress', icon: 'levels', route: '/', section: 'progress-overview' },
 ];
 
 const mobileItems = [
@@ -31,7 +31,7 @@ function getInitials(user) {
     .join('');
 }
 
-export default function AppSidebar({ user, isExpanded = false, onExpandedChange = () => {} }) {
+export default function AppSidebar({ user, isExpanded = false, onExpandedChange = () => { } }) {
   const location = useLocation();
   const navigate = useNavigate();
   const initials = getInitials(user);
@@ -43,6 +43,8 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
       : location.pathname.startsWith('/satsang-central')
         ? 'mandala'
         : 'home';
+
+  const isBottomNavHidden = location.pathname.startsWith('/quiz/') || location.pathname.startsWith('/satsang-central');
 
   const scrollToSection = (section) => {
     if (section === 'dashboard-top') {
@@ -110,14 +112,6 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
         </nav>
 
         <div className="app-sidebar-footer">
-          <div className="app-streak-card">
-            <strong>
-              <AppIcon name="fire" size={18} />
-              <span>7</span>
-            </strong>
-            <small>Day Streak</small>
-          </div>
-
           <button
             className="app-sidebar-profile"
             onClick={() => handleNavigate({ route: '/profile' })}
@@ -133,13 +127,18 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
         </div>
       </aside>
 
-      <nav className="app-bottom-nav" aria-label="Mobile navigation">
+      <nav
+        aria-hidden={isBottomNavHidden ? 'true' : undefined}
+        aria-label="Mobile navigation"
+        className={`app-bottom-nav${isBottomNavHidden ? ' is-hidden' : ''}`}
+      >
         {mobileItems.map((item) => (
           <button
             aria-current={activeKey === item.key ? 'page' : undefined}
             className={`app-bottom-link${activeKey === item.key ? ' is-active' : ''}`}
             key={item.key}
             onClick={() => handleNavigate(item)}
+            tabIndex={isBottomNavHidden ? -1 : undefined}
             type="button"
           >
             <AppIcon name={item.icon} size={20} />

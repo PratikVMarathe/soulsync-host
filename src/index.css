@@ -1868,6 +1868,17 @@ button {
     padding: 0.45rem 0.5rem 0.65rem;
     position: fixed;
     z-index: 30;
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.35s;
+  }
+
+  .app-bottom-nav.is-hidden {
+    transform: translateY(100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   .app-bottom-link {
@@ -2181,7 +2192,11 @@ button {
 }
 
 .satsang-card-actions {
-  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .satsang-btn-interest {
@@ -2191,19 +2206,167 @@ button {
   border-radius: 0.75rem;
   color: #ffffff;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   font-size: 0.9rem;
   font-weight: 600;
   gap: 0.5rem;
   justify-content: center;
+  min-height: 42px;
   padding: 0.65rem 1rem;
   transition: background 0.2s ease, transform 0.15s ease;
-  width: 100%;
+  flex: 1 1 auto;
 }
 
 .satsang-btn-interest:hover {
   background: #1c3d36;
   transform: scale(1.01);
+}
+
+.satsang-btn-view-details {
+  align-items: center;
+  background: rgba(20, 46, 41, 0.08);
+  border: 1px solid rgba(20, 46, 41, 0.18);
+  border-radius: 0.75rem;
+  color: var(--soul-green-deep, #142e29);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.65rem 1rem;
+  transition: all 0.2s ease;
+  flex: 1 1 auto;
+}
+
+.satsang-btn-view-details:hover {
+  background: rgba(20, 46, 41, 0.14);
+  transform: scale(1.01);
+}
+
+.satsang-card-social-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.satsang-social-whatsapp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 42px;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.75rem;
+  background: #25d366;
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(37, 211, 102, 0.25);
+}
+
+.satsang-social-whatsapp-btn:hover {
+  background: #20ba5a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.35);
+  color: #ffffff;
+}
+
+.satsang-social-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.satsang-social-icon-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: var(--soul-green-deep, #142e29);
+  transform: translateY(-1px);
+}
+
+/* Connect Section in Modals */
+.satsang-connect-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 1.25rem 0;
+  padding: 1rem;
+  border-radius: 0.85rem;
+  background: rgba(20, 46, 41, 0.04);
+  border: 1px solid rgba(20, 46, 41, 0.08);
+}
+
+.satsang-connect-section h4 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--soul-green-deep, #142e29);
+  margin: 0 0 0.75rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.satsang-social-actions-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Details Modal */
+.satsang-details-modal-dialog {
+  max-width: 540px;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.satsang-details-image {
+  width: 100%;
+  max-height: 220px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: #f1f5f9;
+}
+
+.satsang-details-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.satsang-details-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #334155;
+  margin: 0 0 1.25rem 0;
+}
+
+.satsang-details-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1.25rem;
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 /* Modal Styling */
@@ -2353,7 +2516,7 @@ button {
 .satsang-modal-footer {
   display: flex;
   gap: 0.75rem;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 0.5rem;
 }
 
@@ -2484,7 +2647,7 @@ button {
     left: 1rem;
     padding: 0.75rem 1.25rem;
     position: fixed;
-    bottom: 4.8rem;
+    bottom: 1.25rem;
     right: 1rem;
     transition: all 0.2s ease;
     z-index: 45;

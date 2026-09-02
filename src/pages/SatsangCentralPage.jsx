@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppIcon from '../components/AppIcon';
+import { getActiveSocialLinks } from '../constants/socialMedia';
 import {
   loadActiveSatsangOpportunities,
+  loadUserInterestRequests,
   submitInterestRequest,
 } from '../services/satsangCentralService';
 import { normalizePhoneNumber } from '../utils/identity';
@@ -51,12 +53,14 @@ function formatTimestampRange(startAt, endAt) {
 export default function SatsangCentralPage({ onUserChange, user }) {
   const navigate = useNavigate();
   const [opportunities, setOpportunities] = useState([]);
+  const [userInterestedIds, setUserInterestedIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showBackButton, setShowBackButton] = useState(false);
 
-  // Modal State
+  // Modals State
   const [activeOpportunity, setActiveOpportunity] = useState(null);
+  const [viewDetailsOpportunity, setViewDetailsOpportunity] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -73,13 +77,20 @@ export default function SatsangCentralPage({ onUserChange, user }) {
   useEffect(() => {
     let ignore = false;
 
-    const fetchOpportunities = async () => {
+    const fetchOpportunitiesAndInterests = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await loadActiveSatsangOpportunities();
+        const [data, userRequests] = await Promise.all([
+          loadActiveSatsangOpportunities(),
+          user?.uid ? loadUserInterestRequests(user.uid) : Promise.resolve([]),
+        ]);
         if (!ignore) {
           setOpportunities(data);
+          if (userRequests) {
+            const interestedSet = new Set(userRequests.map((r) => r.satsangCentralId));
+            setUserInterestedIds(interestedSet);
+          }
         }
       } catch (err) {
         console.error('Failed to load Satsang opportunities:', err);
@@ -91,12 +102,12 @@ export default function SatsangCentralPage({ onUserChange, user }) {
       }
     };
 
-    fetchOpportunities();
+    fetchOpportunitiesAndInterests();
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [user?.uid]);
 
   // 3-second timer for Back to Dashboard button
   useEffect(() => {
@@ -127,6 +138,14 @@ export default function SatsangCentralPage({ onUserChange, user }) {
     setIsSuccess(false);
   }, []);
 
+  const handleOpenDetailsModal = useCallback((opportunity) => {
+    setViewDetailsOpportunity(opportunity);
+  }, []);
+
+  const handleCloseDetailsModal = useCallback(() => {
+    setViewDetailsOpportunity(null);
+  }, []);
+
   const handleSubmitInterest = async (e) => {
     e.preventDefault();
     setPhoneError('');
@@ -152,6 +171,10 @@ export default function SatsangCentralPage({ onUserChange, user }) {
 
       if (updatedUser && typeof onUserChange === 'function') {
         onUserChange(updatedUser);
+      }
+
+      if (activeOpportunity?.id) {
+        setUserInterestedIds((prev) => new Set([...prev, activeOpportunity.id]));
       }
 
       setIsSuccess(true);
@@ -292,14 +315,44 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                           ) : null}
 
                           <div className="satsang-card-actions">
-                            <button
-                              className="satsang-btn-interest"
-                              onClick={() => handleOpenInterestModal(opp)}
-                              type="button"
-                            >
-                              <AppIcon name="heart" size={18} />
-                              <span className="satsang-btn-label">I&apos;m Interested</span>
-                            </button>
+                            {userInterestedIds.has(opp.id) ? (
+                              <button
+                                className="satsang-btn-view-details"
+                                onClick={() => handleOpenDetailsModal(opp)}
+                                type="button"
+                              >
+                                <AppIcon name="book" size={18} />
+                                <span className="satsang-btn-label">View Details</span>
+                              </button>
+                            ) : (
+                              <button
+                                className="satsang-btn-interest"
+                                onClick={() => handleOpenInterestModal(opp)}
+                                type="button"
+                              >
+                                <AppIcon name="heart" size={18} />
+                                <span className="satsang-btn-label">I&apos;m Interested</span>
+                              </button>
+                            )}
+
+                            {getActiveSocialLinks(opp.socialLinks).length > 0 ? (
+                              <div className="satsang-card-social-actions">
+                                {getActiveSocialLinks(opp.socialLinks).map((link) => (
+                                  <a
+                                    aria-label={link.ariaLabel}
+                                    className={link.isPrimarySpecial ? 'satsang-social-whatsapp-btn' : 'satsang-social-icon-btn'}
+                                    href={link.url}
+                                    key={link.platform}
+                                    rel="noopener noreferrer"
+                                    target="_blank"
+                                    title={link.actionLabel}
+                                  >
+                                    <AppIcon name={link.icon} size={18} />
+                                    {link.isPrimarySpecial ? <span>Join WhatsApp</span> : null}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </article>
@@ -324,10 +377,119 @@ export default function SatsangCentralPage({ onUserChange, user }) {
         </button>
       )}
 
+      {/* View Details Modal */}
+      {viewDetailsOpportunity ? (
+        <div className="satsang-modal-backdrop" onClick={handleCloseDetailsModal}>
+          <div
+            aria-modal="true"
+            className="satsang-modal-dialog satsang-details-modal-dialog"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+          >
+            <button
+              aria-label="Close modal"
+              className="satsang-modal-close"
+              onClick={handleCloseDetailsModal}
+              type="button"
+            >
+              <AppIcon name="x" size={20} />
+            </button>
+
+            <div className="satsang-modal-header">
+              <span className="satsang-modal-badge">{viewDetailsOpportunity.category}</span>
+              <h2>{viewDetailsOpportunity.title}</h2>
+            </div>
+
+            {viewDetailsOpportunity.imageUrl ? (
+              <div className="satsang-details-image">
+                <img
+                  alt={viewDetailsOpportunity.imageAlt || viewDetailsOpportunity.title}
+                  onError={(e) => {
+                    e.currentTarget.parentElement.style.display = 'none';
+                  }}
+                  referrerPolicy="no-referrer"
+                  src={viewDetailsOpportunity.imageUrl}
+                />
+              </div>
+            ) : null}
+
+            {viewDetailsOpportunity.description ? (
+              <p className="satsang-details-desc">{viewDetailsOpportunity.description}</p>
+            ) : null}
+
+            <div className="satsang-details-meta-list">
+              {formatTimestampRange(viewDetailsOpportunity.startAt, viewDetailsOpportunity.endAt) ? (
+                <div className="satsang-meta-item">
+                  <AppIcon name="clock" size={18} />
+                  <span>{formatTimestampRange(viewDetailsOpportunity.startAt, viewDetailsOpportunity.endAt)}</span>
+                </div>
+              ) : null}
+
+              {viewDetailsOpportunity.location ? (
+                <div className="satsang-meta-item">
+                  <AppIcon name="location" size={18} />
+                  <span>{viewDetailsOpportunity.location}</span>
+                </div>
+              ) : null}
+
+              {viewDetailsOpportunity.meetingLink ? (
+                <div className="satsang-meta-item">
+                  <AppIcon name="spark" size={18} />
+                  <a
+                    href={viewDetailsOpportunity.meetingLink}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Join Online Meeting
+                  </a>
+                </div>
+              ) : null}
+            </div>
+
+            {getActiveSocialLinks(viewDetailsOpportunity.socialLinks).length > 0 ? (
+              <div className="satsang-connect-section">
+                <h4>Connect with us</h4>
+                <div className="satsang-social-actions-group">
+                  {getActiveSocialLinks(viewDetailsOpportunity.socialLinks).map((link) => (
+                    <a
+                      aria-label={link.ariaLabel}
+                      className={link.isPrimarySpecial ? 'satsang-social-whatsapp-btn' : 'satsang-social-icon-btn'}
+                      href={link.url}
+                      key={link.platform}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                      title={link.actionLabel}
+                    >
+                      <AppIcon name={link.icon} size={18} />
+                      {link.isPrimarySpecial ? <span>Join WhatsApp</span> : null}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="satsang-modal-footer">
+              <button
+                className="satsang-btn-primary"
+                onClick={handleCloseDetailsModal}
+                type="button"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* Interest Form Modal */}
       {activeOpportunity ? (
         <div className="satsang-modal-backdrop" onClick={handleCloseModal}>
-          <div className="satsang-modal-dialog" onClick={(e) => e.stopPropagation()}>
+          <div
+            aria-modal="true"
+            className="satsang-modal-dialog"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+          >
             <button
               aria-label="Close modal"
               className="satsang-modal-close"
@@ -343,8 +505,36 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   <AppIcon name="check" size={32} />
                 </div>
                 <h2>Thank you!</h2>
-                <p>We have received your request.</p>
-                <p className="satsang-success-sub">Our devotee will contact you soon.</p>
+                {getActiveSocialLinks(activeOpportunity?.socialLinks).length > 0 ? (
+                  <>
+                    <p>We have received your request.</p>
+                    <p className="satsang-success-sub">Our devotee will contact you soon.</p>
+                    <div className="satsang-connect-section">
+                      <h4>Connect with us</h4>
+                      <div className="satsang-social-actions-group">
+                        {getActiveSocialLinks(activeOpportunity.socialLinks).map((link) => (
+                          <a
+                            aria-label={link.ariaLabel}
+                            className={link.isPrimarySpecial ? 'satsang-social-whatsapp-btn' : 'satsang-social-icon-btn'}
+                            href={link.url}
+                            key={link.platform}
+                            rel="noopener noreferrer"
+                            target="_blank"
+                            title={link.actionLabel}
+                          >
+                            <AppIcon name={link.icon} size={18} />
+                            {link.isPrimarySpecial ? <span>Join WhatsApp</span> : null}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p>Your interest has been recorded.</p>
+                    <p className="satsang-success-sub">We will connect with you soon.</p>
+                  </>
+                )}
                 <button
                   className="satsang-btn-primary"
                   onClick={handleCloseModal}

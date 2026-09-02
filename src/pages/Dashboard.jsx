@@ -71,13 +71,6 @@ export default function Dashboard({ user }) {
             <h1>Welcome back, {getFirstName(user)}.</h1>
             <p>Continue your journey of self-discovery with one calm step at a time.</p>
           </div>
-
-          <div className="dashboard-chip-row" id="profile-anchor">
-            <div className="app-chip">
-              <AppIcon name="fire" size={16} />
-              <span>7 Day Streak</span>
-            </div>
-          </div>
         </div>
 
         <article className="daily-spark-card">
@@ -93,7 +86,7 @@ export default function Dashboard({ user }) {
               Reflect on this
             </button>
           </div>
-{/* 
+          {/* 
           <div className="daily-spark-glow" aria-hidden="true" /> */}
         </article>
       </section>
@@ -198,14 +191,6 @@ export default function Dashboard({ user }) {
           <article>
             <strong>{quizzes.length}</strong>
             <span>Active concepts</span>
-          </article>
-          <article>
-            <strong>7</strong>
-            <span>Day streak</span>
-          </article>
-          <article>
-            <strong>4</strong>
-            <span>Courses in progress</span>
           </article>
         </div>
       </section>
