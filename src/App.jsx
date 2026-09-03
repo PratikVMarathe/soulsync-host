@@ -133,6 +133,7 @@ function AdminWorkspaceRoute({ onSignOut, onUserChange, signOutPending, user }) 
     return <AdminLoginGate />;
   }
 
+  // Check if the user has an admin role
   if (!isAdminRole(user.role)) {
     return (
       <div className="app-status-screen" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
