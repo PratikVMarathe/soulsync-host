@@ -92,13 +92,18 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     mockLoadUserInterestRequests.mockResolvedValue([]);
   });
 
-  it('renders opportunity cards with social media buttons', async () => {
+  it('renders opportunity cards with social media buttons and class feature pills', async () => {
     renderPage();
 
     await waitFor(() => {
       expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
       expect(screen.getByText('Janmashtami Maha Festival')).toBeInTheDocument();
     });
+
+    // Check class feature pills for Bhagavad Gita Wisdom Class
+    expect(screen.getByText('Online, Offline')).toBeInTheDocument();
+    expect(screen.getByText('English, Hindi')).toBeInTheDocument();
+    expect(screen.getByText('Sat, Sun, Mon, Wed')).toBeInTheDocument();
 
     const whatsappLink = screen.getByRole('link', { name: /join whatsapp/i });
     expect(whatsappLink).toBeInTheDocument();
@@ -155,7 +160,7 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
   });
 
-  it('renders "View Details" button instead of "I\'m Interested" if user already submitted interest', async () => {
+  it('renders "View Details" button and opens View Details modal with class offerings & schedule', async () => {
     mockLoadUserInterestRequests.mockResolvedValueOnce([
       {
         id: 'req-1',
@@ -172,11 +177,21 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     });
 
     const gitaCard = screen.getByText('Bhagavad Gita Wisdom Class').closest('.satsang-card');
-    expect(gitaCard.querySelector('.satsang-btn-view-details')).toBeInTheDocument();
+    const viewDetailsBtn = gitaCard.querySelector('.satsang-btn-view-details');
+    expect(viewDetailsBtn).toBeInTheDocument();
     expect(gitaCard.querySelector('.satsang-btn-interest')).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(viewDetailsBtn);
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('Class Offerings & Schedule')).toBeInTheDocument();
+    expect(within(dialog).getByText('Available Modes')).toBeInTheDocument();
+    expect(within(dialog).getByText('Available Languages')).toBeInTheDocument();
+    expect(within(dialog).getByText('Available Days')).toBeInTheDocument();
   });
 
-  it('validates 9 fields and submits interest request', async () => {
+  it('validates fields and submits interest request with dynamic configured options', async () => {
     mockSubmitInterestRequest.mockResolvedValueOnce(mockUser);
 
     renderPage();
@@ -195,6 +210,11 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     expect(within(dialog).getByText('Express Interest')).toBeInTheDocument();
     expect(within(dialog).getByLabelText(/^Email/i)).toBeDisabled();
 
+    // Verify modal availability summary
+    expect(within(dialog).getByText('Available Modes:')).toBeInTheDocument();
+    expect(within(dialog).getByText('Available Languages:')).toBeInTheDocument();
+    expect(within(dialog).getByText('Available Days:')).toBeInTheDocument();
+
     // Fill in required fields
     const ageInput = within(dialog).getByLabelText(/^Age/i);
     await user.type(ageInput, '24');
@@ -207,10 +227,9 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     await user.selectOptions(passionSelect, 'PROFESSIONAL');
     expect(within(dialog).getByLabelText(/organization \/ company name/i)).toBeInTheDocument();
 
-    // Switch preferred day to OTHER -> check remaining days selection
+    // Select configured day: MONDAY
     const daySelect = within(dialog).getByLabelText(/^Preferred Day/i);
-    await user.selectOptions(daySelect, 'OTHER');
-    expect(within(dialog).getByLabelText(/select available day/i)).toBeInTheDocument();
+    await user.selectOptions(daySelect, 'MONDAY');
 
     // Submit form
     await user.click(within(dialog).getByRole('button', { name: /submit interest/i }));

@@ -2168,6 +2168,37 @@ button {
   margin: 0;
 }
 
+.satsang-card-features {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0.1rem 0;
+}
+
+.satsang-feature-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(20, 46, 41, 0.05);
+  border: 1px solid rgba(20, 46, 41, 0.1);
+  color: var(--soul-green-deep, #142e29);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.satsang-feature-pill svg {
+  color: var(--soul-green-deep, #142e29);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .satsang-card-meta {
   border-top: 1px solid rgba(25, 53, 48, 0.08);
   display: flex;
@@ -2367,6 +2398,120 @@ button {
   border-radius: 0.75rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+}
+
+.satsang-details-features-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.satsang-details-features-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--soul-green-deep, #142e29);
+}
+
+.satsang-details-features-header h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--soul-green-deep, #142e29);
+}
+
+.satsang-details-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.satsang-details-feature-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.satsang-details-feature-item.is-full-width {
+  grid-column: 1 / -1;
+}
+
+.satsang-feature-label {
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.satsang-details-feature-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.satsang-chip-mode,
+.satsang-chip-lang,
+.satsang-chip-day {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.satsang-chip-mode {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.satsang-chip-lang {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+
+.satsang-chip-day {
+  background: rgba(20, 46, 41, 0.08);
+  color: var(--soul-green-deep, #142e29);
+  border: 1px solid rgba(20, 46, 41, 0.15);
+}
+
+.satsang-modal-availability-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem 0.9rem;
+  background: rgba(20, 46, 41, 0.04);
+  border: 1px solid rgba(20, 46, 41, 0.1);
+  border-radius: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.satsang-modal-availability-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.satsang-availability-label {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.satsang-availability-val {
+  color: var(--soul-green-deep, #142e29);
+  font-weight: 600;
 }
 
 /* Modal Styling */
