@@ -15,6 +15,56 @@ const CATEGORY_CONFIG = {
   FESTIVAL: { key: 'FESTIVAL', label: 'Festival', icon: 'lotus' },
 };
 
+const ALL_MODES_MAP = {
+  ONLINE: 'Online',
+  OFFLINE: 'Offline',
+};
+
+const ALL_LANGUAGES_MAP = {
+  ENGLISH: 'English',
+  HINDI: 'Hindi',
+};
+
+const ALL_DAYS_MAP = {
+  SATURDAY: 'Saturday',
+  SUNDAY: 'Sunday',
+  MONDAY: 'Monday',
+  TUESDAY: 'Tuesday',
+  WEDNESDAY: 'Wednesday',
+  THURSDAY: 'Thursday',
+  FRIDAY: 'Friday',
+};
+
+const ALL_DAYS_SHORT_MAP = {
+  SATURDAY: 'Sat',
+  SUNDAY: 'Sun',
+  MONDAY: 'Mon',
+  TUESDAY: 'Tue',
+  WEDNESDAY: 'Wed',
+  THURSDAY: 'Thu',
+  FRIDAY: 'Fri',
+};
+
+function formatModesList(modes) {
+  if (!modes || !modes.length) return '';
+  return modes.map((m) => ALL_MODES_MAP[m] || m).join(', ');
+}
+
+function formatLanguagesList(languages) {
+  if (!languages || !languages.length) return '';
+  return languages.map((l) => ALL_LANGUAGES_MAP[l] || l).join(', ');
+}
+
+function formatDaysShortList(days) {
+  if (!days || !days.length) return '';
+  return days.map((d) => ALL_DAYS_SHORT_MAP[d] || d).join(', ');
+}
+
+function formatDaysFullList(days) {
+  if (!days || !days.length) return '';
+  return days.map((d) => ALL_DAYS_MAP[d] || d).join(', ');
+}
+
 function formatTimestampRange(startAt, endAt) {
   if (!startAt) return '';
 
@@ -144,16 +194,17 @@ export default function SatsangCentralPage({ onUserChange, user }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Compute remaining days configured by admin (excluding Saturday & Sunday)
-  const otherConfiguredDays = useMemo(() => {
-    const configured = activeOpportunity?.classDetails?.availableDays || ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
-    return configured.filter((d) => d !== 'SATURDAY' && d !== 'SUNDAY');
-  }, [activeOpportunity]);
-
   const handleOpenInterestModal = useCallback((opportunity) => {
     setActiveOpportunity(opportunity);
-    const configured = opportunity?.classDetails?.availableDays || ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'];
-    const otherDays = configured.filter((d) => d !== 'SATURDAY' && d !== 'SUNDAY');
+    const availableModes = opportunity?.classDetails?.availableModes?.length
+      ? opportunity.classDetails.availableModes
+      : ['ONLINE', 'OFFLINE'];
+    const availableLanguages = opportunity?.classDetails?.availableLanguages?.length
+      ? opportunity.classDetails.availableLanguages
+      : ['ENGLISH', 'HINDI'];
+    const availableDays = opportunity?.classDetails?.availableDays?.length
+      ? opportunity.classDetails.availableDays
+      : ['SATURDAY', 'SUNDAY'];
 
     setFormData({
       name: user?.displayName || user?.name || '',
@@ -162,10 +213,10 @@ export default function SatsangCentralPage({ onUserChange, user }) {
       age: '',
       passion: 'STUDENT',
       institutionName: '',
-      mode: 'ONLINE',
-      language: 'ENGLISH',
-      dayOption: 'SATURDAY',
-      customDay: otherDays[0] || 'MONDAY',
+      mode: availableModes[0] || 'ONLINE',
+      language: availableLanguages[0] || 'ENGLISH',
+      dayOption: availableDays[0] || 'SATURDAY',
+      customDay: '',
       description: '',
     });
     setPhoneError('');
@@ -223,7 +274,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
       return;
     }
 
-    const preferredDay = formData.dayOption === 'OTHER' ? formData.customDay : formData.dayOption;
+    const preferredDay = formData.dayOption || formData.customDay;
     if (!preferredDay) {
       setFormError('Please select a preferred day.');
       return;
@@ -362,6 +413,31 @@ export default function SatsangCentralPage({ onUserChange, user }) {
 
                           {opp.description ? (
                             <p className="satsang-card-desc">{opp.description}</p>
+                          ) : null}
+
+                          {opp.classDetails ? (
+                            <div className="satsang-card-features">
+                              {opp.classDetails.availableModes?.length ? (
+                                <div className="satsang-feature-pill" title={`Available Modes: ${formatModesList(opp.classDetails.availableModes)}`}>
+                                  <AppIcon name="spark" size={14} />
+                                  <span>{formatModesList(opp.classDetails.availableModes)}</span>
+                                </div>
+                              ) : null}
+
+                              {opp.classDetails.availableLanguages?.length ? (
+                                <div className="satsang-feature-pill" title={`Available Languages: ${formatLanguagesList(opp.classDetails.availableLanguages)}`}>
+                                  <AppIcon name="message" size={14} />
+                                  <span>{formatLanguagesList(opp.classDetails.availableLanguages)}</span>
+                                </div>
+                              ) : null}
+
+                              {opp.classDetails.availableDays?.length ? (
+                                <div className="satsang-feature-pill" title={`Available Days: ${formatDaysFullList(opp.classDetails.availableDays)}`}>
+                                  <AppIcon name="calendar" size={14} />
+                                  <span>{formatDaysShortList(opp.classDetails.availableDays)}</span>
+                                </div>
+                              ) : null}
+                            </div>
                           ) : null}
 
                           {(timeRange || opp.location || opp.meetingLink) ? (
@@ -533,6 +609,59 @@ export default function SatsangCentralPage({ onUserChange, user }) {
               <p className="satsang-details-desc">{viewDetailsOpportunity.description}</p>
             ) : null}
 
+            {viewDetailsOpportunity.classDetails ? (
+              <div className="satsang-details-features-card">
+                <div className="satsang-details-features-header">
+                  <AppIcon name="book" size={16} />
+                  <h4>Class Offerings &amp; Schedule</h4>
+                </div>
+
+                <div className="satsang-details-features-grid">
+                  {viewDetailsOpportunity.classDetails.availableModes?.length ? (
+                    <div className="satsang-details-feature-item">
+                      <small className="satsang-feature-label">Available Modes</small>
+                      <div className="satsang-details-feature-chips">
+                        {viewDetailsOpportunity.classDetails.availableModes.map((m) => (
+                          <span className="satsang-chip-mode" key={m}>
+                            <AppIcon name="spark" size={13} />
+                            {ALL_MODES_MAP[m] || m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {viewDetailsOpportunity.classDetails.availableLanguages?.length ? (
+                    <div className="satsang-details-feature-item">
+                      <small className="satsang-feature-label">Available Languages</small>
+                      <div className="satsang-details-feature-chips">
+                        {viewDetailsOpportunity.classDetails.availableLanguages.map((l) => (
+                          <span className="satsang-chip-lang" key={l}>
+                            <AppIcon name="message" size={13} />
+                            {ALL_LANGUAGES_MAP[l] || l}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {viewDetailsOpportunity.classDetails.availableDays?.length ? (
+                    <div className="satsang-details-feature-item is-full-width">
+                      <small className="satsang-feature-label">Available Days</small>
+                      <div className="satsang-details-feature-chips">
+                        {viewDetailsOpportunity.classDetails.availableDays.map((d) => (
+                          <span className="satsang-chip-day" key={d}>
+                            <AppIcon name="calendar" size={13} />
+                            {ALL_DAYS_MAP[d] || d}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
             <div className="satsang-details-meta-list">
               {formatTimestampRange(viewDetailsOpportunity.startAt, viewDetailsOpportunity.endAt) ? (
                 <div className="satsang-meta-item">
@@ -667,6 +796,29 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   <p><strong>{activeOpportunity.title}</strong></p>
                 </div>
 
+                {activeOpportunity.classDetails ? (
+                  <div className="satsang-modal-availability-summary">
+                    {activeOpportunity.classDetails.availableModes?.length ? (
+                      <div className="satsang-modal-availability-item">
+                        <span className="satsang-availability-label">Available Modes:</span>
+                        <span className="satsang-availability-val">{formatModesList(activeOpportunity.classDetails.availableModes)}</span>
+                      </div>
+                    ) : null}
+                    {activeOpportunity.classDetails.availableLanguages?.length ? (
+                      <div className="satsang-modal-availability-item">
+                        <span className="satsang-availability-label">Available Languages:</span>
+                        <span className="satsang-availability-val">{formatLanguagesList(activeOpportunity.classDetails.availableLanguages)}</span>
+                      </div>
+                    ) : null}
+                    {activeOpportunity.classDetails.availableDays?.length ? (
+                      <div className="satsang-modal-availability-item">
+                        <span className="satsang-availability-label">Available Days:</span>
+                        <span className="satsang-availability-val">{formatDaysFullList(activeOpportunity.classDetails.availableDays)}</span>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {formError ? <div className="satsang-form-alert">{formError}</div> : null}
 
                 {/* 1. Name */}
@@ -781,7 +933,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   />
                 </div>
 
-                {/* 7. Mode (Online / Offline only) */}
+                {/* 7. Mode */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-mode">
                     Mode <span className="satsang-required">*</span>
@@ -792,12 +944,17 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                     required
                     value={formData.mode}
                   >
-                    <option value="ONLINE">Online</option>
-                    <option value="OFFLINE">Offline</option>
+                    {(activeOpportunity?.classDetails?.availableModes?.length
+                      ? activeOpportunity.classDetails.availableModes
+                      : ['ONLINE', 'OFFLINE']).map((m) => (
+                      <option key={m} value={m}>
+                        {ALL_MODES_MAP[m] || m}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
-                {/* 8. Preferred Language (English / Hindi only) */}
+                {/* 8. Preferred Language */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-language">
                     Preferred Language <span className="satsang-required">*</span>
@@ -808,60 +965,36 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                     required
                     value={formData.language}
                   >
-                    <option value="ENGLISH">English</option>
-                    <option value="HINDI">Hindi</option>
+                    {(activeOpportunity?.classDetails?.availableLanguages?.length
+                      ? activeOpportunity.classDetails.availableLanguages
+                      : ['ENGLISH', 'HINDI']).map((l) => (
+                      <option key={l} value={l}>
+                        {ALL_LANGUAGES_MAP[l] || l}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
-                {/* 9. Preferred Day (Saturday / Sunday / Other) */}
+                {/* 9. Preferred Day */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-day-option">
                     Preferred Day <span className="satsang-required">*</span>
                   </label>
                   <select
                     id="interest-day-option"
-                    onChange={(e) => {
-                      const newOption = e.target.value;
-                      setFormData({
-                        ...formData,
-                        dayOption: newOption,
-                        customDay: newOption === 'OTHER' ? (otherConfiguredDays[0] || 'MONDAY') : '',
-                      });
-                    }}
+                    onChange={(e) => setFormData({ ...formData, dayOption: e.target.value })}
                     required
                     value={formData.dayOption}
                   >
-                    <option value="SATURDAY">Saturday</option>
-                    <option value="SUNDAY">Sunday</option>
-                    <option value="OTHER">Other</option>
+                    {(activeOpportunity?.classDetails?.availableDays?.length
+                      ? activeOpportunity.classDetails.availableDays
+                      : ['SATURDAY', 'SUNDAY']).map((d) => (
+                      <option key={d} value={d}>
+                        {ALL_DAYS_MAP[d] || d}
+                      </option>
+                    ))}
                   </select>
                 </div>
-
-                {formData.dayOption === 'OTHER' ? (
-                  <div className="satsang-form-group">
-                    <label htmlFor="interest-custom-day">
-                      Select Available Day <span className="satsang-required">*</span>
-                    </label>
-                    {otherConfiguredDays.length > 0 ? (
-                      <select
-                        id="interest-custom-day"
-                        onChange={(e) => setFormData({ ...formData, customDay: e.target.value })}
-                        required
-                        value={formData.customDay}
-                      >
-                        {otherConfiguredDays.map((day) => (
-                          <option key={day} value={day}>
-                            {day.charAt(0) + day.slice(1).toLowerCase()}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <p className="satsang-input-help">
-                        No additional days are configured beyond Saturday &amp; Sunday.
-                      </p>
-                    )}
-                  </div>
-                ) : null}
 
                 {/* 10. Description (Optional) */}
                 <div className="satsang-form-group">
