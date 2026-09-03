@@ -1,4 +1,8 @@
 import { useNavigate } from 'react-router-dom';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
+import { FEATURE_MESSAGES } from '../constants/featureMessages';
+import { useAppNotice } from '../hooks/useAppNotice';
 import { formatLevelLabel } from '../utils/identity';
 import AppIcon from './AppIcon';
 
@@ -22,8 +26,9 @@ function getImageUrl(quiz) {
   return quiz?.imageUrl || '/images/home_page_meditation.png';
 }
 
-export default function ChallengeCard({ quiz }) {
+export default function ChallengeCard({ onSignIn, quiz, user = null }) {
   const navigate = useNavigate();
+  const { showNotice } = useAppNotice();
   const themeClass = themeMap[quiz?.slug] || themeMap[quiz?.category] || 'is-forest';
   const displayTitle = getDisplayTitle(quiz?.title);
   const questionCount = quiz?.totalQuestions || quiz?.questions?.length || 0;
@@ -43,6 +48,33 @@ export default function ChallengeCard({ quiz }) {
   else if (isCompletedNoRetake) buttonLabel = 'Completed';
   else if (isCompleted) buttonLabel = 'Retake Concept';
 
+  const handleStartConcept = async () => {
+    if (user) {
+      navigate(`/quiz/${quizPathKey}`);
+      return;
+    }
+
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        window.sessionStorage.setItem('pendingQuizSlug', quizPathKey);
+      }
+      showNotice(FEATURE_MESSAGES.QUIZ_SIGN_IN_REQUIRED, 'info');
+
+      if (onSignIn) {
+        await onSignIn();
+      } else {
+        await signInWithPopup(auth, googleProvider);
+      }
+    } catch (error) {
+      if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') {
+        showNotice(FEATURE_MESSAGES.LOGIN_CANCELLED, 'info');
+      } else {
+        console.error('Google sign in failed from concept card:', error);
+        showNotice('We could not start Google sign in. Please try again.', 'error');
+      }
+    }
+  };
+
   return (
     <article className={`challenge-card ${themeClass}`}>
       <div className="challenge-card-image">
@@ -50,7 +82,7 @@ export default function ChallengeCard({ quiz }) {
       </div>
 
       <div className="challenge-card-header">
-        <span className="challenge-card-chip" style={{border:'1px solid'}}>{formatLevelLabel(quiz?.level)}</span>
+        <span className="challenge-card-chip" style={{ border: '1px solid' }}>{formatLevelLabel(quiz?.level)}</span>
         {isResume && (
           <span className="challenge-card-chip" style={{ backgroundColor: '#ff9800', color: '#ffffff' }}>
             In Progress
@@ -61,7 +93,7 @@ export default function ChallengeCard({ quiz }) {
             Completed
           </span>
         )}
-        <span className="challenge-card-time" style={{border:'1px solid'}}>
+        <span className="challenge-card-time" style={{ border: '1px solid' }}>
           <AppIcon name="question" size={14} />
           {questionCount} Ques
         </span>
@@ -87,7 +119,7 @@ export default function ChallengeCard({ quiz }) {
         <button
           className="challenge-card-action"
           disabled={isCompletedNoRetake}
-          onClick={() => navigate(`/quiz/${quizPathKey}`)}
+          onClick={handleStartConcept}
           type="button"
           style={{ flex: 1 }}
         >

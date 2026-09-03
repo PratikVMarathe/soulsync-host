@@ -569,6 +569,11 @@ button {
   margin-left: 5.8rem;
 }
 
+.app-layout-body.is-guest {
+  margin-left: 0;
+  width: 100%;
+}
+
 .app-sidebar {
   backdrop-filter: blur(12px);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 252, 247, 0.84) 100%);
@@ -1819,6 +1824,10 @@ button {
 
   .app-layout-main {
     padding: 0 1rem 5.8rem;
+  }
+
+  .app-layout-body.is-guest .app-layout-main {
+    padding: 0 1rem 2rem;
   }
 
   .dashboard-hero,

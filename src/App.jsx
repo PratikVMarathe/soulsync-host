@@ -29,19 +29,50 @@ import {
 } from './services/sessionService';
 import './index.css';
 
-const loadAdminModule = import.meta.env.DEV
+const loadAdminModule = (import.meta.env.DEV || import.meta.env.MODE === 'test')
   ? () => import('../../soulsync-admin/src/AdminModule.jsx')
-  : () => import('adminApp/AdminModule');
+  : () => {
+      const remote = 'adminApp/AdminModule';
+      return import(/* @vite-ignore */ `${remote}`);
+    };
 
-const loadQuizWidget = import.meta.env.DEV
+const loadQuizWidget = (import.meta.env.DEV || import.meta.env.MODE === 'test')
   ? () => import('../../soulsync-quiz/src/App.jsx')
-  : () => import('quizApp/QuizWidget');
+  : () => {
+      const remote = 'quizApp/QuizWidget';
+      return import(/* @vite-ignore */ `${remote}`);
+    };
 
 const AdminModule = lazy(loadAdminModule);
 const QuizWidget = lazy(loadQuizWidget);
 
 function isAdminRole(role) {
   return ADMIN_ROLES.includes(role);
+}
+
+function isValidQuizSlug(slug) {
+  return typeof slug === 'string' && /^[a-z0-9]+(-[a-z0-9]+)*$/i.test(slug.trim());
+}
+
+function PendingQuizRedirectHandler({ user }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user || isAdminRole(user.role)) return;
+
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const pendingSlug = window.sessionStorage.getItem('pendingQuizSlug');
+      if (pendingSlug) {
+        window.sessionStorage.removeItem('pendingQuizSlug');
+        const trimmed = pendingSlug.trim();
+        if (isValidQuizSlug(trimmed)) {
+          navigate(`/quiz/${trimmed}`, { replace: true });
+        }
+      }
+    }
+  }, [user, navigate]);
+
+  return null;
 }
 
 function UserRoleGuard({ children, user }) {
@@ -85,7 +116,21 @@ function QuizWrapper({ user }) {
   );
 }
 
-function UserShell({ onUserChange, user }) {
+function GuestDirectQuizRoute() {
+  const { quizId } = useParams();
+
+  useEffect(() => {
+    if (quizId && typeof window !== 'undefined' && window.sessionStorage) {
+      if (isValidQuizSlug(quizId)) {
+        window.sessionStorage.setItem('pendingQuizSlug', quizId);
+      }
+    }
+  }, [quizId]);
+
+  return <Navigate replace to="/quiz" />;
+}
+
+function UserShell({ onSignOut, onUserChange, user }) {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const location = useLocation();
 
@@ -98,7 +143,11 @@ function UserShell({ onUserChange, user }) {
       />
 
       <div className={`app-layout-body${isSidebarExpanded ? ' is-sidebar-expanded' : ''}`}>
-        <AppTopbar isSidebarExpanded={isSidebarExpanded} user={user} />
+        <AppTopbar
+          isSidebarExpanded={isSidebarExpanded}
+          onSignOut={onSignOut}
+          user={user}
+        />
 
         <main className="app-layout-main">
           <AppErrorBoundary resetKey={location.pathname}>
@@ -136,7 +185,7 @@ function UserShell({ onUserChange, user }) {
                 path="/satsang-central"
               />
               <Route
-                element={
+                element={(
                   <UserRoleGuard user={user}>
                     <AppErrorBoundary
                       compact
@@ -152,7 +201,7 @@ function UserShell({ onUserChange, user }) {
                       </Suspense>
                     </AppErrorBoundary>
                   </UserRoleGuard>
-                }
+                )}
                 path="/quiz/:quizId"
               />
               <Route element={<Navigate replace to="/" />} path="/admin/*" />
@@ -198,13 +247,30 @@ function AdminWorkspaceRoute({ onSignOut, onUserChange, signOutPending, user }) 
   );
 }
 
-function GuestRoutes({ authError }) {
+function GuestRoutes({ authError, onSignOut }) {
   return (
     <AppErrorBoundary>
       <Routes>
         <Route element={<LandingPage authError={authError} />} path="/" />
+        <Route
+          element={(
+            <div className="app-layout is-guest">
+              <div className="app-layout-body is-guest">
+                <AppTopbar onSignOut={onSignOut} user={null} />
+                <main className="app-layout-main">
+                  <QuizLibraryPage user={null} />
+                </main>
+              </div>
+            </div>
+          )}
+          path="/quiz"
+        />
+        <Route element={<GuestDirectQuizRoute />} path="/quiz/:quizId" />
+        <Route element={<Navigate replace to="/" />} path="/profile" />
+        <Route element={<Navigate replace to="/" />} path="/dashboard" />
+        <Route element={<Navigate replace to="/" />} path="/satsang-central" />
         <Route element={<Navigate replace to="/" />} path="/admin/*" />
-        <Route element={<NotFoundPage />} path="*" />
+        <Route element={<Navigate replace to="/" />} path="*" />
       </Routes>
     </AppErrorBoundary>
   );
@@ -238,7 +304,7 @@ function AppRouter({
   user,
 }) {
   if (!user) {
-    return <GuestRoutes authError={authError} />;
+    return <GuestRoutes authError={authError} onSignOut={onSignOut} />;
   }
 
   if (isAdminRole(user.role)) {
@@ -252,7 +318,13 @@ function AppRouter({
     );
   }
 
-  return <UserShell onUserChange={onUserChange} user={user} />;
+  return (
+    <UserShell
+      onSignOut={onSignOut}
+      onUserChange={onUserChange}
+      user={user}
+    />
+  );
 }
 
 export default function App() {
@@ -318,6 +390,7 @@ export default function App() {
     } catch (error) {
       console.error('Failed to sign out from SoulSync host:', error);
     } finally {
+      setUser(null);
       setSignOutPending(false);
     }
   }, []);
@@ -336,6 +409,7 @@ export default function App() {
         </div>
 
         <AppNoticeCenter />
+        <PendingQuizRedirectHandler user={user} />
         <AppRouter
           authError={authError}
           onSignOut={handleSignOut}

@@ -147,7 +147,7 @@ export default function Dashboard({ user }) {
         ) : previewQuizzes.length ? (
           <div className="challenge-grid is-home-preview">
             {previewQuizzes.map((quiz) => (
-              <ChallengeCard key={quiz.id} quiz={quiz} />
+              <ChallengeCard key={quiz.id} quiz={quiz} user={user} />
             ))}
           </div>
         ) : (

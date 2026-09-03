@@ -4,4 +4,6 @@ export const FEATURE_MESSAGES = {
   DAILY_SPARK: 'Guided reflection is not available yet. For now, explore the active challenges to keep moving forward.',
   MARKETING_SECTION: 'This section is not live yet. Sign in to explore the current SoulSync experience.',
   NOTIFICATIONS: 'Notifications are not available yet. They will appear here once reminders and alerts are connected.',
+  QUIZ_SIGN_IN_REQUIRED: 'Please sign in to save your quiz result and explore more wisdom concepts.',
+  LOGIN_CANCELLED: 'Google sign in was cancelled before it finished.',
 };
