@@ -20,32 +20,52 @@ export function isQuizAvailableNow(quiz, now = Date.now()) {
 }
 
 export async function loadUserAttemptsSummary(userId) {
-  if (!userId) return {};
-
-  const attemptsQuery = collection(db, 'users', userId, 'quizAttempts');
-  const querySnapshot = await getDocs(attemptsQuery);
   const summary = {};
 
-  querySnapshot.docs.forEach((documentSnapshot) => {
-    const data = documentSnapshot.data();
-    const slug = data.quizSlug;
-    if (!slug) return;
-
-    if (!summary[slug]) {
-      summary[slug] = {
-        hasActive: false,
-        hasCompleted: false,
-        resumeQuestionIndex: 0,
-      };
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const localCompleted = JSON.parse(localStorage.getItem('soulsync_completed_quizzes') || '{}');
+      Object.keys(localCompleted).forEach((slug) => {
+        summary[slug] = {
+          hasActive: false,
+          hasCompleted: true,
+          resumeQuestionIndex: 0,
+        };
+      });
+    } catch (e) {
+      console.error('Failed to read local completed quizzes:', e);
     }
+  }
 
-    if (data.status === 'IN_PROGRESS') {
-      summary[slug].hasActive = true;
-      summary[slug].resumeQuestionIndex = data.runtime?.currentQuestionIndex ?? data.currentQuestionIndex ?? 0;
-    } else if (data.status === 'COMPLETED') {
-      summary[slug].hasCompleted = true;
+  if (userId) {
+    try {
+      const attemptsQuery = collection(db, 'users', userId, 'quizAttempts');
+      const querySnapshot = await getDocs(attemptsQuery);
+
+      querySnapshot.docs.forEach((documentSnapshot) => {
+        const data = documentSnapshot.data();
+        const slug = data.quizSlug;
+        if (!slug) return;
+
+        if (!summary[slug]) {
+          summary[slug] = {
+            hasActive: false,
+            hasCompleted: false,
+            resumeQuestionIndex: 0,
+          };
+        }
+
+        if (data.status === 'IN_PROGRESS') {
+          summary[slug].hasActive = true;
+          summary[slug].resumeQuestionIndex = data.runtime?.currentQuestionIndex ?? data.currentQuestionIndex ?? 0;
+        } else if (data.status === 'COMPLETED') {
+          summary[slug].hasCompleted = true;
+        }
+      });
+    } catch (err) {
+      console.error('Failed to load user attempts from Firestore:', err);
     }
-  });
+  }
 
   return summary;
 }
