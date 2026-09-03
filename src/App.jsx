@@ -27,22 +27,8 @@ import {
 } from './services/sessionService';
 import './index.css';
 
-const loadAdminModule = (import.meta.env.DEV || import.meta.env.MODE === 'test')
-  ? () => import('../../soulsync-admin/src/AdminModule.jsx')
-  : () => {
-      const remote = 'adminApp/AdminModule';
-      return import(/* @vite-ignore */ `${remote}`);
-    };
-
-const loadQuizWidget = (import.meta.env.DEV || import.meta.env.MODE === 'test')
-  ? () => import('../../soulsync-quiz/src/App.jsx')
-  : () => {
-      const remote = 'quizApp/QuizWidget';
-      return import(/* @vite-ignore */ `${remote}`);
-    };
-
-const AdminModule = lazy(loadAdminModule);
-const QuizWidget = lazy(loadQuizWidget);
+const AdminModule = lazy(() => import('adminApp/AdminModule'));
+const QuizWidget = lazy(() => import('quizApp/QuizWidget'));
 
 function isAdminRole(role) {
   return ADMIN_ROLES.includes(role);
