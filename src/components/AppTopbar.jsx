@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
 import { FEATURE_MESSAGES } from '../constants/featureMessages';
 import { useAppNotice } from '../hooks/useAppNotice';
 import AppIcon from './AppIcon';
@@ -17,9 +17,39 @@ function getInitials(user) {
     .join('');
 }
 
-export default function AppTopbar({ user, isSidebarExpanded = false }) {
+export default function AppTopbar({
+  isSidebarExpanded = false,
+  onSignIn,
+  onSignOut,
+  user = null,
+}) {
   const initials = getInitials(user);
   const { showNotice } = useAppNotice();
+
+  const handleSignIn = async () => {
+    try {
+      if (onSignIn) {
+        await onSignIn();
+        return;
+      }
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') {
+        showNotice(FEATURE_MESSAGES.LOGIN_CANCELLED, 'info');
+      } else {
+        console.error('Sign in failed:', error);
+        showNotice('We could not start Google sign in. Please try again.', 'error');
+      }
+    }
+  };
+
+  const handleSignOutClick = async () => {
+    if (onSignOut) {
+      await onSignOut();
+      return;
+    }
+    await signOut(auth);
+  };
 
   return (
     <header className="app-topbar">
@@ -35,33 +65,50 @@ export default function AppTopbar({ user, isSidebarExpanded = false }) {
       </div>
 
       <div className="app-topbar-actions">
-        <button
-          className="app-icon-button"
-          onClick={() => showNotice(FEATURE_MESSAGES.NOTIFICATIONS)}
-          type="button"
-        >
-          <AppIcon name="bell" size={18} />
-        </button>
+        {user ? (
+          <>
+            <button
+              className="app-icon-button"
+              onClick={() => showNotice(FEATURE_MESSAGES.NOTIFICATIONS)}
+              type="button"
+            >
+              <AppIcon name="bell" size={18} />
+            </button>
 
-        <Link
-          aria-label="Open profile"
-          className="app-user-pill app-user-pill-link"
-          to="/profile"
-        >
-          <span className="app-user-fallback">{initials}</span>
-        </Link>
+            <Link
+              aria-label="Open profile"
+              className="app-user-pill app-user-pill-link"
+              to="/profile"
+            >
+              <span className="app-user-fallback">{initials}</span>
+            </Link>
 
-        <button className="app-ghost-button" onClick={() => signOut(auth)} type="button">
-          Sign out
-        </button>
+            <button
+              className="app-ghost-button"
+              onClick={handleSignOutClick}
+              type="button"
+            >
+              Sign out
+            </button>
 
-        <button
-          className="app-topbar-signout-mobile"
-          onClick={() => signOut(auth)}
-          type="button"
-        >
-          Sign out
-        </button>
+            <button
+              className="app-topbar-signout-mobile"
+              onClick={handleSignOutClick}
+              type="button"
+            >
+              Sign out
+            </button>
+          </>
+        ) : (
+          <button
+            className="primary-cta is-compact"
+            onClick={handleSignIn}
+            style={{ borderRadius: '12px', minHeight: '38px', padding: '0.45rem 1rem' }}
+            type="button"
+          >
+            Sign in
+          </button>
+        )}
       </div>
     </header>
   );

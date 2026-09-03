@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider } from '../config/firebase';
 import AppIcon from '../components/AppIcon';
@@ -6,9 +7,9 @@ import Brand from '../components/Brand';
 import { FEATURE_MESSAGES } from '../constants/featureMessages';
 import { useAppNotice } from '../hooks/useAppNotice';
 
-const navigationItems = ['Courses', 'Wisdom', 'Quiz', 'AI Guide', 'About'];
+// const navigationItems = ['Courses', 'Wisdom', 'Quiz', 'AI Guide', 'About'];
+const navigationItems = ['Quiz', 'AI Guide'];
 const valuePoints = ['Reduce Stress', 'Improve Focus', 'Live with Purpose'];
-const partnerLogos = ['Google', 'Microsoft', 'pwc', 'Deloitte.', 'Infosys'];
 const authFlow = import.meta.env.VITE_FIREBASE_AUTH_FLOW?.trim().toLowerCase() === 'redirect'
   ? 'redirect'
   : 'popup';
@@ -21,7 +22,8 @@ function getLoginErrorMessage(error) {
   return 'We could not start Google sign in. Please try again.';
 }
 
-export default function LandingPage({ authError = '' }) {
+export default function LandingPage({ authError = '', onSignIn }) {
+  const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,6 +34,11 @@ export default function LandingPage({ authError = '' }) {
     setLoginError('');
 
     try {
+      if (onSignIn) {
+        await onSignIn();
+        return;
+      }
+
       if (authFlow === 'redirect') {
         await signInWithRedirect(auth, googleProvider);
         return;
@@ -43,6 +50,14 @@ export default function LandingPage({ authError = '' }) {
       setLoginError(getLoginErrorMessage(error));
       setIsSigningIn(false);
     }
+  };
+
+  const handleNavClick = (item) => {
+    if (item === 'Quiz') {
+      navigate('/quiz');
+      return;
+    }
+    showNotice(FEATURE_MESSAGES.MARKETING_SECTION);
   };
 
   const scrollToPartners = () => {
@@ -78,7 +93,7 @@ export default function LandingPage({ authError = '' }) {
               <button
                 className="marketing-link"
                 key={item}
-                onClick={() => showNotice(FEATURE_MESSAGES.MARKETING_SECTION)}
+                onClick={() => handleNavClick(item)}
                 type="button"
               >
                 {item}
@@ -142,9 +157,13 @@ export default function LandingPage({ authError = '' }) {
                 {isSigningIn ? 'Signing in...' : 'Start Your Journey'}
               </button>
 
-              <button className="secondary-cta" onClick={scrollToPartners} type="button">
-                <AppIcon name="play" size={16} />
-                <span>Watch Demo</span>
+              <button
+                className="secondary-cta"
+                onClick={() => navigate('/quiz')}
+                type="button"
+              >
+                <AppIcon name="question" size={16} />
+                <span>Find Your Quiz</span>
               </button>
             </div>
           </div>
@@ -163,16 +182,6 @@ export default function LandingPage({ authError = '' }) {
             </article>
           </div>
         </div>
-
-        <footer className="landing-trust" id="landing-partners">
-          <span>Trusted by learners seeking clarity</span>
-
-          <div className="landing-logo-row">
-            {partnerLogos.map((logo) => (
-              <strong key={logo}>{logo}</strong>
-            ))}
-          </div>
-        </footer>
       </div>
     </section>
   );

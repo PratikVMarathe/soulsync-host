@@ -114,13 +114,13 @@ export default function AppSidebar({ user, isExpanded = false, onExpandedChange 
         <div className="app-sidebar-footer">
           <button
             className="app-sidebar-profile"
-            onClick={() => handleNavigate({ route: '/profile' })}
+            onClick={() => handleNavigate({ route: user ? '/profile' : '/' })}
             type="button"
           >
             <span className="app-sidebar-avatar">{initials}</span>
             <span className="app-sidebar-profile-copy">
-              <strong>{user?.displayName || 'SoulSync Member'}</strong>
-              <small>View Profile</small>
+              <strong>{user?.displayName || (user ? 'SoulSync Member' : 'Guest')}</strong>
+              <small>{user ? 'View Profile' : 'Sign In'}</small>
             </span>
             <AppIcon className="app-sidebar-profile-arrow" name="chevron" size={16} />
           </button>

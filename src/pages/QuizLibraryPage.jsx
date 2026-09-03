@@ -7,7 +7,7 @@ import { formatLevelLabel } from '../utils/identity';
 
 const QUIZZES_PER_PAGE = 6;
 
-export default function QuizLibraryPage({ user = null }) {
+export default function QuizLibraryPage({ onSignIn, user = null }) {
   const { quizzes, loading, error, retry } = useActiveQuizzes(user);
   const [filters, setFilters] = useState({
     category: '',
@@ -106,7 +106,7 @@ export default function QuizLibraryPage({ user = null }) {
           <>
             <div className="quiz-library-grid">
               {visibleQuizzes.map((quiz) => (
-                <ChallengeCard key={quiz.id} quiz={quiz} />
+                <ChallengeCard key={quiz.id} onSignIn={onSignIn} quiz={quiz} user={user} />
               ))}
             </div>
 
