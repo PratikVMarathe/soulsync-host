@@ -68,7 +68,7 @@ export default function Dashboard({ user }) {
       <section className="dashboard-hero" id="dashboard-top">
         <div className="dashboard-heading">
           <div>
-            <h1>Welcome back, {getFirstName(user)}.</h1>
+            <h1>Welcome to SoulSync.</h1>
             <p>Continue your journey of self-discovery with one calm step at a time.</p>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function Dashboard({ user }) {
           </div>
           <button
             className="section-link"
-            onClick={() => showNotice(FEATURE_MESSAGES.CONTINUE_LEARNING)}
+            onClick={() => showNotice(FEATURE_MESSAGES.COURSES_PAGE)}
             type="button"
           >
             See all
@@ -109,24 +109,30 @@ export default function Dashboard({ user }) {
         <div className="learning-grid">
           {continueLearning.map((item) => (
             <article className={`learning-card ${item.tone}`} key={item.title}>
-              <div className="learning-card-copy">
-                <strong>{item.title}</strong>
-                <span>{item.subtitle}</span>
+              <div>
+                <span className="learning-card-tag">{item.subtitle}</span>
+                <h3>{item.title}</h3>
               </div>
-              <small>{item.progressLabel}</small>
-              <div className="learning-progress">
-                <span style={{ width: `${item.progressValue}%` }} />
+
+              <div className="learning-card-progress">
+                <div className="progress-bar">
+                  <div
+                    className="progress-bar-fill"
+                    style={{ width: `${item.progressValue}%` }}
+                  />
+                </div>
+                <small>{item.progressLabel}</small>
               </div>
             </article>
           ))}
         </div>
       </section> */}
 
-      <section className="dashboard-section" id="active-challenges">
+      <section className="dashboard-section" id="daily-concepts">
         <div className="section-heading">
           <div>
-            <h2>Active Challenges</h2>
-            <p>Pick a concept and test your understanding.</p>
+            <h2>Daily Concepts</h2>
+            <p>Reflect on one insight, understand its root, and carry it through the day.</p>
           </div>
           <button className="section-link" onClick={() => navigate('/quiz')} type="button">
             See all
@@ -141,13 +147,12 @@ export default function Dashboard({ user }) {
             state={error}
             actions={[
               { label: 'Try Again', onClick: retry },
-              { label: 'View Profile', onClick: () => navigate('/profile'), tone: 'secondary' },
             ]}
           />
         ) : previewQuizzes.length ? (
           <div className="challenge-grid is-home-preview">
             {previewQuizzes.map((quiz) => (
-              <ChallengeCard key={quiz.id} quiz={quiz} user={user} />
+              <ChallengeCard key={quiz.id} quiz={quiz} />
             ))}
           </div>
         ) : (

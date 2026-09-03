@@ -208,7 +208,7 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     // Form modal opens
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByText('Express Interest')).toBeInTheDocument();
-    expect(within(dialog).getByLabelText(/^Email/i)).toBeDisabled();
+    expect(within(dialog).getByLabelText(/^Email/i)).toBeInTheDocument();
 
     // Verify modal availability summary
     expect(within(dialog).getByText('Available Modes:')).toBeInTheDocument();

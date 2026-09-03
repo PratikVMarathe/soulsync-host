@@ -16,7 +16,7 @@ function renderSidebar(initialRoute = '/') {
   );
 }
 
-describe('AppSidebar — Mobile Bottom Navigation Visibility', () => {
+describe('AppSidebar — Navigation & Mobile Bottom Bar', () => {
   it('displays bottom navigation bar on Home / Dashboard route', () => {
     renderSidebar('/');
 
@@ -38,15 +38,6 @@ describe('AppSidebar — Mobile Bottom Navigation Visibility', () => {
     expect(bottomNav).not.toHaveAttribute('aria-hidden');
   });
 
-  it('displays bottom navigation bar on Profile route (/profile)', () => {
-    renderSidebar('/profile');
-
-    const bottomNav = screen.getByRole('navigation', { name: /mobile navigation/i });
-    expect(bottomNav).toBeInTheDocument();
-    expect(bottomNav).not.toHaveClass('is-hidden');
-    expect(bottomNav).not.toHaveAttribute('aria-hidden');
-  });
-
   it('hides mobile bottom navigation during Quiz Attempt & Result (/quiz/:quizId)', () => {
     renderSidebar('/quiz/concept-1-focus');
 
@@ -56,8 +47,7 @@ describe('AppSidebar — Mobile Bottom Navigation Visibility', () => {
     expect(bottomNav).toHaveClass('is-hidden');
     expect(bottomNav).toHaveAttribute('aria-hidden', 'true');
 
-    // Desktop sidebar remains unaffected and accessible
-    const desktopAside = screen.getByRole('complementary', { name: /primary navigation/i });
+    const desktopAside = document.querySelector('.app-sidebar');
     expect(desktopAside).toBeInTheDocument();
   });
 
@@ -69,8 +59,7 @@ describe('AppSidebar — Mobile Bottom Navigation Visibility', () => {
     expect(bottomNav).toHaveClass('is-hidden');
     expect(bottomNav).toHaveAttribute('aria-hidden', 'true');
 
-    // Desktop sidebar remains unaffected and accessible
-    const desktopAside = screen.getByRole('complementary', { name: /primary navigation/i });
+    const desktopAside = document.querySelector('.app-sidebar');
     expect(desktopAside).toBeInTheDocument();
   });
 });

@@ -82,7 +82,12 @@ export async function loadAvailableQuizzes(userId = null) {
       };
     })
     .filter((quiz) => isQuizAvailableNow(quiz, now))
-    .sort((left, right) => (left.title || '').localeCompare(right.title || ''));
+    .sort((left, right) => {
+      const seqLeft = typeof left.sequence === 'number' ? left.sequence : Number.MAX_SAFE_INTEGER;
+      const seqRight = typeof right.sequence === 'number' ? right.sequence : Number.MAX_SAFE_INTEGER;
+      if (seqLeft !== seqRight) return seqLeft - seqRight;
+      return (left.title || '').localeCompare(right.title || '');
+    });
 }
 
 

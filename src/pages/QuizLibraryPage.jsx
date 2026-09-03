@@ -106,7 +106,7 @@ export default function QuizLibraryPage({ onSignIn, user = null }) {
           <>
             <div className="quiz-library-grid">
               {visibleQuizzes.map((quiz) => (
-                <ChallengeCard key={quiz.id} onSignIn={onSignIn} quiz={quiz} user={user} />
+                <ChallengeCard key={quiz.id} quiz={quiz} />
               ))}
             </div>
 
