@@ -4,11 +4,27 @@ import {
   extractPhoneDigits,
   formatLevelLabel,
   formatRoleLabel,
+  isValidEmail,
   isValidPhoneNumber,
   normalizeEmail,
   normalizePhoneNumber,
   sanitizePhoneInput,
 } from './identity';
+
+// ─── isValidEmail ─────────────────────────────────────────────────────────────
+
+describe('isValidEmail', () => {
+  it('returns true for valid email formats', () => {
+    expect(isValidEmail('user@example.com')).toBe(true);
+    expect(isValidEmail('test.devotee@soulsync.org')).toBe(true);
+  });
+
+  it('returns false for invalid formats', () => {
+    expect(isValidEmail('')).toBe(false);
+    expect(isValidEmail('invalid-email')).toBe(false);
+    expect(isValidEmail(null)).toBe(false);
+  });
+});
 
 // ─── normalizeEmail ───────────────────────────────────────────────────────────
 

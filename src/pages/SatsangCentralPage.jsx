@@ -269,7 +269,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
       } else if (formData.passion === 'PROFESSIONAL') {
         setFormError('Organization / Company Name is required.');
       } else {
-        setFormError('Please provide what best describes you.');
+        setFormError('Please provide what best describes you./ कौन सा विकल्प आपका सबसे अच्छा वर्णन करता है?');
       }
       return;
     }
@@ -824,7 +824,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                 {/* 1. Name */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-name">
-                    Name <span className="satsang-required">*</span>
+                    Name / नाम <span className="satsang-required">*</span>
                   </label>
                   <input
                     id="interest-name"
@@ -835,21 +835,21 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   />
                 </div>
 
-                {/* 2. Email (Read-only) */}
+                {/* 2. Email (Optional) */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-email">
-                    Email <span className="satsang-required">*</span>
+                    Email (Optional)
                   </label>
                   <input
                     id="interest-email"
                     onChange={(e) => {
                       setFormData({ ...formData, email: e.target.value });
                     }}
-                    required
+                    placeholder="e.g. name@example.com (optional)"
                     type="email"
                     value={formData.email}
                   />
-                  <small className="satsang-input-help">Required to send you details and updates regarding this activity.</small>
+                  <small className="satsang-input-help">Optional. Used to send you details and updates regarding this activity.</small>
                 </div>
 
                 {/* 3. Phone Number */}
@@ -879,7 +879,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                 {/* 4. Age */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-age">
-                    Age <span className="satsang-required">*</span>
+                    Age / आयु / उम्र <span className="satsang-required">*</span>
                   </label>
                   <input
                     id="interest-age"
@@ -896,7 +896,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                 {/* 5. Passion */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-passion">
-                    Passion <span className="satsang-required">*</span>
+                    Passion / आप क्या करते हैं <span className="satsang-required">*</span>
                   </label>
                   <select
                     id="interest-passion"
@@ -917,7 +917,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                       ? 'College / Institution Name *'
                       : formData.passion === 'PROFESSIONAL'
                         ? 'Organization / Company Name *'
-                        : 'What best describes you? *'}
+                        : 'What best describes you? / कौन सा विकल्प आपका सबसे अच्छा वर्णन करता है? *'}
                   </label>
                   <input
                     id="interest-institution"
@@ -938,7 +938,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                 {/* 7. Mode */}
                 <div className="satsang-form-group">
                   <label htmlFor="interest-mode">
-                    Mode <span className="satsang-required">*</span>
+                    Mode / माध्यम <span className="satsang-required">*</span>
                   </label>
                   <select
                     id="interest-mode"
@@ -969,7 +969,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   >
                     {(activeOpportunity?.classDetails?.availableLanguages?.length
                       ? activeOpportunity.classDetails.availableLanguages
-                      : ['ENGLISH', 'HINDI']).map((l) => (
+                      : ['ENGLISH / अंग्रेजी', 'HINDI / हिंदी']).map((l) => (
                         <option key={l} value={l}>
                           {ALL_LANGUAGES_MAP[l] || l}
                         </option>
@@ -990,7 +990,7 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                   >
                     {(activeOpportunity?.classDetails?.availableDays?.length
                       ? activeOpportunity.classDetails.availableDays
-                      : ['SATURDAY', 'SUNDAY']).map((d) => (
+                      : ['SATURDAY / शनिवार', 'SUNDAY / रविवार']).map((d) => (
                         <option key={d} value={d}>
                           {ALL_DAYS_MAP[d] || d}
                         </option>

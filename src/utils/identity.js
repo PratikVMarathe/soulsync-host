@@ -2,6 +2,11 @@ import { IDENTITY_TYPES } from '../constants/auth';
 
 export const normalizeEmail = (email) => email?.trim().toLowerCase() || '';
 
+export const isValidEmail = (email) => {
+  if (!email || typeof email !== 'string') return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+};
+
 export const extractPhoneDigits = (phoneNumber) => String(phoneNumber || '').replace(/\D/g, '');
 
 export const sanitizePhoneInput = (phoneNumber) => extractPhoneDigits(phoneNumber).slice(0, 10);

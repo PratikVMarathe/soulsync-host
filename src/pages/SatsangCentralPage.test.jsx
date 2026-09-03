@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -189,6 +189,50 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     expect(within(dialog).getByText('Available Modes')).toBeInTheDocument();
     expect(within(dialog).getByText('Available Languages')).toBeInTheDocument();
     expect(within(dialog).getByText('Available Days')).toBeInTheDocument();
+  });
+
+  it('validates fields and submits interest request without email required', async () => {
+    mockSubmitInterestRequest.mockResolvedValueOnce(null);
+
+    // Render without user email
+    renderPage({ user: { displayName: 'Guest User', phoneNumber: '9876543210' } });
+
+    await waitFor(() => {
+      expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
+    });
+
+    const user = userEvent.setup();
+    const gitaCard = screen.getByText('Bhagavad Gita Wisdom Class').closest('.satsang-card');
+    const interestBtn = gitaCard.querySelector('.satsang-btn-interest');
+    await user.click(interestBtn);
+
+    const dialog = screen.getByRole('dialog');
+
+    // Fill in required fields
+    const ageInput = within(dialog).getByLabelText(/^Age/i);
+    await user.type(ageInput, '28');
+
+    const institutionInput = within(dialog).getByLabelText(/college \/ institution name/i);
+    await user.type(institutionInput, 'Pune University');
+
+    // Submit form with empty email
+    await user.click(within(dialog).getByRole('button', { name: /submit interest/i }));
+
+    await waitFor(() => {
+      expect(mockSubmitInterestRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Guest User',
+          email: '',
+          phoneNumber: '9876543210',
+          age: 28,
+          passion: 'STUDENT',
+          mode: 'ONLINE',
+          language: 'ENGLISH',
+          preferredDay: 'SATURDAY',
+        }),
+      );
+      expect(screen.getByText('Thank you!')).toBeInTheDocument();
+    });
   });
 
   it('validates fields and submits interest request with dynamic configured options', async () => {

@@ -23,14 +23,14 @@ export function useActiveQuizzes(user = null) {
         console.error('Error fetching quizzes:', fetchError);
         setError(resolveAppErrorState(fetchError, fetchError.code === 'permission-denied'
           ? {
-              message: 'Your account cannot read the active concepts. Please check the Firestore rules for quizzes.',
-              statusCode: 403,
-              title: 'Quiz Access Restricted',
-            }
+            message: 'Your account cannot read the active concepts. Please check the Firestore rules for quizzes.',
+            statusCode: 403,
+            title: 'Quiz Access Restricted',
+          }
           : {
-              message: 'We could not load the active concepts right now. Please try again.',
-              title: 'Could Not Load Challenges',
-            }));
+            message: 'We could not load the active concepts right now. Please try again.',
+            title: 'Could Not Load Challenges',
+          }));
       } finally {
         setLoading(false);
       }

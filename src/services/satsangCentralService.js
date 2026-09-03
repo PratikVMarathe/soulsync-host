@@ -12,6 +12,7 @@ import {
 import { db } from '../config/firebase';
 import {
   buildIdentityDocumentId,
+  isValidEmail,
   isValidPhoneNumber,
   normalizePhoneNumber,
 } from '../utils/identity';
@@ -84,8 +85,8 @@ export async function submitInterestRequest({
   if (!cleanName) {
     throw new Error('Name is required.');
   }
-  if (!cleanEmail) {
-    throw new Error('Email is required.');
+  if (cleanEmail && !isValidEmail(cleanEmail)) {
+    throw new Error('Please enter a valid email address.');
   }
   if (!cleanPhone || !isValidPhoneNumber(cleanPhone)) {
     throw new Error('Phone number must be exactly 10 digits.');
