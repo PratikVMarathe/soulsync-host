@@ -30,14 +30,14 @@ vi.mock('./services/quizCatalogService', () => ({
   filterQuizzes: vi.fn().mockReturnValue([]),
 }));
 
-describe('App — Routing, Auth & Sign Out Flow', () => {
+describe('App — Routing & Public User Mode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.sessionStorage.clear();
     window.history.pushState({}, '', '/');
   });
 
-  it('renders landing page when user is not authenticated', async () => {
+  it('renders dashboard directly when visitor is not signed in', async () => {
     mockOnAuthStateChanged.mockImplementation((auth, callback) => {
       callback(null);
       return () => {};
@@ -46,31 +46,24 @@ describe('App — Routing, Auth & Sign Out Flow', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /ancient wisdom/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /start your journey/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /welcome to soulsync/i })).toBeInTheDocument();
+      expect(screen.getByText(/daily spark/i)).toBeInTheDocument();
     });
   });
 
-  it('redirects to /quiz/:slug after login if pendingQuizSlug is in sessionStorage', async () => {
-    window.sessionStorage.setItem('pendingQuizSlug', 'jnana');
+  it('renders admin login gate when navigating to /admin/* unauthenticated', async () => {
+    window.history.pushState({}, '', '/admin/quizzes');
 
     mockOnAuthStateChanged.mockImplementation((auth, callback) => {
-      callback({ uid: 'user-123', email: 'devotee@soulsync.dev' });
+      callback(null);
       return () => {};
-    });
-
-    mockResolveAuthSession.mockResolvedValueOnce({
-      uid: 'user-123',
-      email: 'devotee@soulsync.dev',
-      role: 'USER',
-      status: 'ACTIVE',
     });
 
     render(<App />);
 
     await waitFor(() => {
-      expect(window.sessionStorage.getItem('pendingQuizSlug')).toBeNull();
-      expect(window.location.pathname).toBe('/quiz/jnana');
+      expect(screen.getByRole('heading', { name: /soulsync admin portal/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
     });
   });
 });

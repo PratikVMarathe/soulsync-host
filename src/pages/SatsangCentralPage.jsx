@@ -841,13 +841,15 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                     Email <span className="satsang-required">*</span>
                   </label>
                   <input
-                    disabled
                     id="interest-email"
-                    readOnly
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                    }}
+                    required
                     type="email"
                     value={formData.email}
                   />
-                  <small className="satsang-input-help">Email is linked to your account and cannot be changed.</small>
+                  <small className="satsang-input-help">Required to send you details and updates regarding this activity.</small>
                 </div>
 
                 {/* 3. Phone Number */}
@@ -947,10 +949,10 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                     {(activeOpportunity?.classDetails?.availableModes?.length
                       ? activeOpportunity.classDetails.availableModes
                       : ['ONLINE', 'OFFLINE']).map((m) => (
-                      <option key={m} value={m}>
-                        {ALL_MODES_MAP[m] || m}
-                      </option>
-                    ))}
+                        <option key={m} value={m}>
+                          {ALL_MODES_MAP[m] || m}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -968,10 +970,10 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                     {(activeOpportunity?.classDetails?.availableLanguages?.length
                       ? activeOpportunity.classDetails.availableLanguages
                       : ['ENGLISH', 'HINDI']).map((l) => (
-                      <option key={l} value={l}>
-                        {ALL_LANGUAGES_MAP[l] || l}
-                      </option>
-                    ))}
+                        <option key={l} value={l}>
+                          {ALL_LANGUAGES_MAP[l] || l}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -989,10 +991,10 @@ export default function SatsangCentralPage({ onUserChange, user }) {
                     {(activeOpportunity?.classDetails?.availableDays?.length
                       ? activeOpportunity.classDetails.availableDays
                       : ['SATURDAY', 'SUNDAY']).map((d) => (
-                      <option key={d} value={d}>
-                        {ALL_DAYS_MAP[d] || d}
-                      </option>
-                    ))}
+                        <option key={d} value={d}>
+                          {ALL_DAYS_MAP[d] || d}
+                        </option>
+                      ))}
                   </select>
                 </div>
 

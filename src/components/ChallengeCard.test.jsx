@@ -44,7 +44,7 @@ function renderCard(props = {}) {
   );
 }
 
-describe('ChallengeCard — Public Access & Auth Gate', () => {
+describe('ChallengeCard — Public Access Mode', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.sessionStorage.clear();
@@ -58,44 +58,13 @@ describe('ChallengeCard — Public Access & Auth Gate', () => {
     expect(screen.getByRole('button', { name: /start concept/i })).toBeInTheDocument();
   });
 
-  it('navigates directly to /quiz/:slug when user is authenticated', async () => {
+  it('navigates directly to /quiz/:slug when clicking Start Concept for any visitor', async () => {
     const user = userEvent.setup();
-    const mockUser = { uid: 'user-123', email: 'devotee@soulsync.dev' };
-    renderCard({ user: mockUser });
+    renderCard();
 
     const startBtn = screen.getByRole('button', { name: /start concept/i });
     await user.click(startBtn);
 
     expect(mockNavigate).toHaveBeenCalledWith('/quiz/jnana');
-    expect(window.sessionStorage.getItem('pendingQuizSlug')).toBeNull();
-    expect(mockSignInWithPopup).not.toHaveBeenCalled();
-  });
-
-  it('preserves pendingQuizSlug in sessionStorage and opens Google auth when user is logged out', async () => {
-    const user = userEvent.setup();
-    mockSignInWithPopup.mockResolvedValueOnce({ user: { uid: 'user-new' } });
-
-    renderCard({ user: null });
-
-    const startBtn = screen.getByRole('button', { name: /start concept/i });
-    await user.click(startBtn);
-
-    expect(window.sessionStorage.getItem('pendingQuizSlug')).toBe('jnana');
-    expect(mockSignInWithPopup).toHaveBeenCalled();
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it('handles cancelled Google sign-in gracefully without crashing or navigating', async () => {
-    const user = userEvent.setup();
-    mockSignInWithPopup.mockRejectedValueOnce({ code: 'auth/popup-closed-by-user' });
-
-    renderCard({ user: null });
-
-    const startBtn = screen.getByRole('button', { name: /start concept/i });
-    await user.click(startBtn);
-
-    expect(window.sessionStorage.getItem('pendingQuizSlug')).toBe('jnana');
-    expect(mockSignInWithPopup).toHaveBeenCalled();
-    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

@@ -8,8 +8,8 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './config/firebase';
+import { onAuthStateChanged, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from './config/firebase';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import AppNoticeCenter from './components/AppNoticeCenter';
 import AppSidebar from './components/AppSidebar';
@@ -17,9 +17,7 @@ import AppTopbar from './components/AppTopbar';
 import { ADMIN_ROLES } from './constants/auth';
 import { AppNoticeProvider } from './context/AppNoticeContext';
 import Dashboard from './pages/Dashboard';
-import LandingPage from './pages/LandingPage';
 import NotFoundPage from './pages/NotFoundPage';
-import ProfilePage from './pages/ProfilePage';
 import QuizLibraryPage from './pages/QuizLibraryPage';
 import SatsangCentralPage from './pages/SatsangCentralPage';
 import {
@@ -48,43 +46,6 @@ const QuizWidget = lazy(loadQuizWidget);
 
 function isAdminRole(role) {
   return ADMIN_ROLES.includes(role);
-}
-
-function isValidQuizSlug(slug) {
-  return typeof slug === 'string' && /^[a-z0-9]+(-[a-z0-9]+)*$/i.test(slug.trim());
-}
-
-function PendingQuizRedirectHandler({ user }) {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user || isAdminRole(user.role)) return;
-
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      const pendingSlug = window.sessionStorage.getItem('pendingQuizSlug');
-      if (pendingSlug) {
-        window.sessionStorage.removeItem('pendingQuizSlug');
-        const trimmed = pendingSlug.trim();
-        if (isValidQuizSlug(trimmed)) {
-          navigate(`/quiz/${trimmed}`, { replace: true });
-        }
-      }
-    }
-  }, [user, navigate]);
-
-  return null;
-}
-
-function UserRoleGuard({ children, user }) {
-  if (!user) {
-    return <Navigate replace to="/" />;
-  }
-
-  if (isAdminRole(user.role)) {
-    return <Navigate replace to="/admin/" />;
-  }
-
-  return children;
 }
 
 function QuizWrapper({ user }) {
@@ -116,99 +77,49 @@ function QuizWrapper({ user }) {
   );
 }
 
-function GuestDirectQuizRoute() {
-  const { quizId } = useParams();
+function AdminLoginGate() {
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  useEffect(() => {
-    if (quizId && typeof window !== 'undefined' && window.sessionStorage) {
-      if (isValidQuizSlug(quizId)) {
-        window.sessionStorage.setItem('pendingQuizSlug', quizId);
+  const handleAdminSignIn = async () => {
+    setIsSigningIn(true);
+    setErrorMsg('');
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      if (err?.code !== 'auth/popup-closed-by-user' && err?.code !== 'auth/cancelled-popup-request') {
+        setErrorMsg('Sign-in failed. Please try again.');
       }
+    } finally {
+      setIsSigningIn(false);
     }
-  }, [quizId]);
-
-  return <Navigate replace to="/quiz" />;
-}
-
-function UserShell({ onSignOut, onUserChange, user }) {
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-  const location = useLocation();
+  };
 
   return (
-    <div className="app-layout">
-      <AppSidebar
-        isExpanded={isSidebarExpanded}
-        onExpandedChange={setIsSidebarExpanded}
-        user={user}
-      />
+    <div className="app-status-screen" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="admin-dialog-card" style={{ maxWidth: '440px', width: '90%', padding: '2.5rem', textAlign: 'center' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.75rem' }}>
+          SoulSync Admin Portal
+        </h2>
+        <p style={{ fontSize: '0.92rem', color: '#64748b', lineHeight: 1.5, marginBottom: '1.75rem' }}>
+          Please sign in with your authorized administrator account to manage quizzes and satsang opportunities.
+        </p>
 
-      <div className={`app-layout-body${isSidebarExpanded ? ' is-sidebar-expanded' : ''}`}>
-        <AppTopbar
-          isSidebarExpanded={isSidebarExpanded}
-          onSignOut={onSignOut}
-          user={user}
-        />
+        {errorMsg && (
+          <div style={{ background: '#fef2f2', color: '#b91c1c', padding: '0.65rem', borderRadius: '8px', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+            {errorMsg}
+          </div>
+        )}
 
-        <main className="app-layout-main">
-          <AppErrorBoundary resetKey={location.pathname}>
-            <Routes>
-              <Route
-                element={(
-                  <UserRoleGuard user={user}>
-                    <Dashboard user={user} />
-                  </UserRoleGuard>
-                )}
-                path="/"
-              />
-              <Route
-                element={(
-                  <UserRoleGuard user={user}>
-                    <ProfilePage onUserChange={onUserChange} user={user} />
-                  </UserRoleGuard>
-                )}
-                path="/profile"
-              />
-              <Route
-                element={(
-                  <UserRoleGuard user={user}>
-                    <QuizLibraryPage user={user} />
-                  </UserRoleGuard>
-                )}
-                path="/quiz"
-              />
-              <Route
-                element={(
-                  <UserRoleGuard user={user}>
-                    <SatsangCentralPage onUserChange={onUserChange} user={user} />
-                  </UserRoleGuard>
-                )}
-                path="/satsang-central"
-              />
-              <Route
-                element={(
-                  <UserRoleGuard user={user}>
-                    <AppErrorBoundary
-                      compact
-                      fallbackState={{
-                        message: 'The quiz experience could not be loaded. The quiz service may be unavailable right now.',
-                        statusCode: 502,
-                        title: 'Quiz Service Unavailable',
-                      }}
-                      resetKey={location.pathname}
-                    >
-                      <Suspense fallback={<div className="app-loading-screen">Loading concept...</div>}>
-                        <QuizWrapper user={user} />
-                      </Suspense>
-                    </AppErrorBoundary>
-                  </UserRoleGuard>
-                )}
-                path="/quiz/:quizId"
-              />
-              <Route element={<Navigate replace to="/" />} path="/admin/*" />
-              <Route element={<NotFoundPage />} path="*" />
-            </Routes>
-          </AppErrorBoundary>
-        </main>
+        <button
+          className="primary-cta"
+          disabled={isSigningIn}
+          onClick={handleAdminSignIn}
+          style={{ width: '100%', justifyContent: 'center', minHeight: '44px' }}
+          type="button"
+        >
+          <span>{isSigningIn ? 'Signing in...' : 'Sign in with Google'}</span>
+        </button>
       </div>
     </div>
   );
@@ -216,13 +127,41 @@ function UserShell({ onSignOut, onUserChange, user }) {
 
 function AdminWorkspaceRoute({ onSignOut, onUserChange, signOutPending, user }) {
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (!user) {
-    return <Navigate replace to="/" />;
+    return <AdminLoginGate />;
   }
 
   if (!isAdminRole(user.role)) {
-    return <Navigate replace to="/" />;
+    return (
+      <div className="app-status-screen" style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="admin-dialog-card" style={{ maxWidth: '440px', width: '90%', padding: '2.5rem', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#b91c1c', marginBottom: '0.75rem' }}>
+            Access Denied
+          </h2>
+          <p style={{ fontSize: '0.92rem', color: '#64748b', lineHeight: 1.5, marginBottom: '1.5rem' }}>
+            Your account ({user.email}) is not registered with administrator privileges.
+          </p>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+            <button
+              className="secondary-cta is-compact"
+              onClick={() => navigate('/')}
+              type="button"
+            >
+              Go to Dashboard
+            </button>
+            <button
+              className="ghost-cta is-compact"
+              onClick={onSignOut}
+              type="button"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -247,39 +186,74 @@ function AdminWorkspaceRoute({ onSignOut, onUserChange, signOutPending, user }) 
   );
 }
 
-function GuestRoutes({ authError, onSignOut }) {
+function UserShell({ onUserChange, user }) {
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+  const location = useLocation();
+
   return (
-    <AppErrorBoundary>
-      <Routes>
-        <Route element={<LandingPage authError={authError} />} path="/" />
-        <Route
-          element={(
-            <div className="app-layout is-guest">
-              <div className="app-layout-body is-guest">
-                <AppTopbar onSignOut={onSignOut} user={null} />
-                <main className="app-layout-main">
-                  <QuizLibraryPage user={null} />
-                </main>
-              </div>
-            </div>
-          )}
-          path="/quiz"
+    <div className="app-layout">
+      <AppSidebar
+        isExpanded={isSidebarExpanded}
+        onExpandedChange={setIsSidebarExpanded}
+      />
+
+      <div className={`app-layout-body${isSidebarExpanded ? ' is-sidebar-expanded' : ''}`}>
+        <AppTopbar
+          isSidebarExpanded={isSidebarExpanded}
         />
-        <Route element={<GuestDirectQuizRoute />} path="/quiz/:quizId" />
-        <Route element={<Navigate replace to="/" />} path="/profile" />
-        <Route element={<Navigate replace to="/" />} path="/dashboard" />
-        <Route element={<Navigate replace to="/" />} path="/satsang-central" />
-        <Route element={<Navigate replace to="/" />} path="/admin/*" />
-        <Route element={<Navigate replace to="/" />} path="*" />
-      </Routes>
-    </AppErrorBoundary>
+
+        <main className="app-layout-main">
+          <AppErrorBoundary resetKey={location.pathname}>
+            <Routes>
+              <Route
+                element={<Dashboard user={user} />}
+                path="/"
+              />
+              <Route
+                element={<QuizLibraryPage user={user} />}
+                path="/quiz"
+              />
+              <Route
+                element={(
+                  <AppErrorBoundary
+                    compact
+                    fallbackState={{
+                      message: 'The quiz experience could not be loaded. The quiz service may be unavailable right now.',
+                      statusCode: 502,
+                      title: 'Quiz Service Unavailable',
+                    }}
+                    resetKey={location.pathname}
+                  >
+                    <Suspense fallback={<div className="app-loading-screen">Loading concept...</div>}>
+                      <QuizWrapper user={user} />
+                    </Suspense>
+                  </AppErrorBoundary>
+                )}
+                path="/quiz/:quizId"
+              />
+              <Route
+                element={<SatsangCentralPage onUserChange={onUserChange} user={user} />}
+                path="/satsang-central"
+              />
+              <Route element={<Navigate replace to="/" />} path="/profile" />
+              <Route element={<Navigate replace to="/" />} path="/dashboard" />
+              <Route element={<NotFoundPage />} path="*" />
+            </Routes>
+          </AppErrorBoundary>
+        </main>
+      </div>
+    </div>
   );
 }
 
-function AdminRoutes({ onSignOut, onUserChange, signOutPending, user }) {
+function AppRouter({
+  onSignOut,
+  onUserChange,
+  signOutPending,
+  user,
+}) {
   return (
     <Routes>
-      <Route element={<Navigate replace to="/admin/" />} path="/" />
       <Route
         element={(
           <AdminWorkspaceRoute
@@ -291,39 +265,16 @@ function AdminRoutes({ onSignOut, onUserChange, signOutPending, user }) {
         )}
         path="/admin/*"
       />
-      <Route element={<Navigate replace to="/admin/" />} path="*" />
-    </Routes>
-  );
-}
-
-function AppRouter({
-  authError,
-  onSignOut,
-  onUserChange,
-  signOutPending,
-  user,
-}) {
-  if (!user) {
-    return <GuestRoutes authError={authError} onSignOut={onSignOut} />;
-  }
-
-  if (isAdminRole(user.role)) {
-    return (
-      <AdminRoutes
-        onSignOut={onSignOut}
-        onUserChange={onUserChange}
-        signOutPending={signOutPending}
-        user={user}
+      <Route
+        element={(
+          <UserShell
+            onUserChange={onUserChange}
+            user={user}
+          />
+        )}
+        path="/*"
       />
-    );
-  }
-
-  return (
-    <UserShell
-      onSignOut={onSignOut}
-      onUserChange={onUserChange}
-      user={user}
-    />
+    </Routes>
   );
 }
 
@@ -409,9 +360,7 @@ export default function App() {
         </div>
 
         <AppNoticeCenter />
-        <PendingQuizRedirectHandler user={user} />
         <AppRouter
-          authError={authError}
           onSignOut={handleSignOut}
           onUserChange={setUser}
           signOutPending={signOutPending}
