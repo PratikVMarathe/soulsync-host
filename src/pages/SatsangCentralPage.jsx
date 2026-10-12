@@ -157,14 +157,25 @@ export default function SatsangCentralPage({ onUserChange, user }) {
 
           // Check for "Continue Your Journey" quiz flow
           if (location.state?.fromQuizJourney) {
-            const classOpps = data.filter((o) => (o.category || '').toUpperCase() === 'CLASS');
-            const gitaOpp = classOpps.find((o) => (o.title || '').toLowerCase().includes('gita'))
-              || classOpps[0]
-              || data[0];
+            // Check if user has already registered for Gita class in localStorage
+            let hasRegisteredGita = false;
+            try {
+              hasRegisteredGita = typeof window !== 'undefined'
+                && window.localStorage?.getItem('hasRegisteredGitaClass') === 'true';
+            } catch (storageErr) {
+              console.warn('Failed to read hasRegisteredGitaClass from localStorage:', storageErr);
+            }
 
-            if (gitaOpp && !interestedSet.has(gitaOpp.id)) {
-              setGitaPromptOpportunity(gitaOpp);
-              setShowGitaPrompt(true);
+            if (!hasRegisteredGita) {
+              const classOpps = data.filter((o) => (o.category || '').toUpperCase() === 'CLASS');
+              const gitaOpp = classOpps.find((o) => (o.title || '').toLowerCase().includes('gita'))
+                || classOpps[0]
+                || data[0];
+
+              if (gitaOpp && !interestedSet.has(gitaOpp.id)) {
+                setGitaPromptOpportunity(gitaOpp);
+                setShowGitaPrompt(true);
+              }
             }
           }
         }
@@ -307,6 +318,16 @@ export default function SatsangCentralPage({ onUserChange, user }) {
       }
 
       setIsSuccess(true);
+      // Registration Storage: Record registration in localStorage for guest/unauthenticated users
+      try {
+        const isGita = (activeOpportunity?.title || '').toLowerCase().includes('gita')
+          || (activeOpportunity?.category || '').toUpperCase() === 'CLASS';
+        if (isGita) {
+          localStorage.setItem('hasRegisteredGitaClass', 'true');
+        }
+      } catch (storageErr) {
+        console.warn('Failed to save hasRegisteredGitaClass to localStorage:', storageErr);
+      }
     } catch (err) {
       console.error('Failed to submit interest request:', err);
       if (err.code === 'phone-registered' || err.message?.includes('already registered')) {
@@ -528,13 +549,14 @@ export default function SatsangCentralPage({ onUserChange, user }) {
         </button>
       )}
 
-      {/* Bhagavad Gita Interest Popup Dialog */}
-      {showGitaPrompt && gitaPromptOpportunity ? (
+      {/* Bhagavad Gita Interest Popup Dialog (completely hidden if already registered) */}
+      {showGitaPrompt && gitaPromptOpportunity && (typeof window === 'undefined' || window.localStorage?.getItem('hasRegisteredGitaClass') !== 'true') ? (
         <div className="satsang-modal-backdrop">
           <div
             aria-modal="true"
             className="satsang-modal-dialog satsang-prompt-modal-dialog"
             role="dialog"
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="satsang-prompt-content">
               <div className="satsang-prompt-badge">

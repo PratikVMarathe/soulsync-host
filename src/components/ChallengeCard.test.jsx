@@ -50,19 +50,19 @@ describe('ChallengeCard — Public Access Mode', () => {
     window.sessionStorage.clear();
   });
 
-  it('renders concept details and "Start Concept" button', () => {
+  it('renders concept details and "Start Quiz" button', () => {
     renderCard();
 
     expect(screen.getByText('Jnana')).toBeInTheDocument();
     expect(screen.getByText('Understand the essence of spiritual knowledge and devotion.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /start concept/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start quiz/i })).toBeInTheDocument();
   });
 
-  it('navigates directly to /quiz/:slug when clicking Start Concept for any visitor', async () => {
+  it('navigates directly to /quiz/:slug when clicking Start Quiz for any visitor', async () => {
     const user = userEvent.setup();
     renderCard();
 
-    const startBtn = screen.getByRole('button', { name: /start concept/i });
+    const startBtn = screen.getByRole('button', { name: /start quiz/i });
     await user.click(startBtn);
 
     expect(mockNavigate).toHaveBeenCalledWith('/quiz/jnana');

@@ -38,10 +38,10 @@ export default function ChallengeCard({ quiz }) {
   const isCompletedNoRetake = attemptStatus === 'COMPLETED_NO_RETAKE';
   const isCompleted = attemptStatus === 'COMPLETED' || isCompletedNoRetake;
 
-  let buttonLabel = 'Start Concept';
-  if (isResume) buttonLabel = 'Resume Concept';
+  let buttonLabel = 'Start Quiz';
+  if (isResume) buttonLabel = 'Resume Quiz';
   else if (isCompletedNoRetake) buttonLabel = 'Completed';
-  else if (isCompleted) buttonLabel = 'Retake Concept';
+  else if (isCompleted) buttonLabel = 'Retake Quiz';
 
   return (
     <article className={`challenge-card ${themeClass}`}>

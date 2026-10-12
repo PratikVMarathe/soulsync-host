@@ -1077,7 +1077,7 @@ button {
 
 .challenge-card-image {
   border-radius: 1rem;
-  height: 20rem;
+  height: 15rem;
   margin-bottom: 1rem;
   overflow: hidden;
   position: relative;
@@ -1772,16 +1772,6 @@ button {
 
   .app-layout-body {
     margin-left: 0;
-  }
-
-  body.soulsync-quiz-active .app-topbar,
-  body.soulsync-quiz-active .app-bottom-nav {
-    display: none !important;
-  }
-
-  body.soulsync-quiz-active .app-layout-main {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
   }
 
   .app-topbar {

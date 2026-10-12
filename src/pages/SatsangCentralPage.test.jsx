@@ -88,6 +88,7 @@ function renderPage(props = {}, routerState = null) {
 describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     mockLoadActiveSatsangOpportunities.mockResolvedValue(mockOpportunities);
     mockLoadUserInterestRequests.mockResolvedValue([]);
   });
@@ -158,6 +159,17 @@ describe('SatsangCentralPage — Prompt Flow, Interest Form & Social Media', () 
     // Prompt closed, Satsang Central cards visible
     expect(screen.queryByText(/we are having bhagavad gita class/i)).not.toBeInTheDocument();
     expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
+  });
+
+  it('completely hides Bhagavad Gita prompt when arriving from Continue Your Journey flow if already registered in localStorage', async () => {
+    localStorage.setItem('hasRegisteredGitaClass', 'true');
+    renderPage({}, { fromQuizJourney: true });
+
+    await waitFor(() => {
+      expect(screen.getByText('Bhagavad Gita Wisdom Class')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText(/we are having bhagavad gita class/i)).not.toBeInTheDocument();
   });
 
   it('renders "View Details" button and opens View Details modal with class offerings & schedule', async () => {
