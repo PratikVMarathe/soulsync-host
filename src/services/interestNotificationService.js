@@ -9,7 +9,7 @@ export function getApiBaseUrl() {
   if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
     return 'http://localhost:5003';
   }
-  return 'https://soulsync-api-dev.onrender.com';
+  return 'https://soulsync-api-mlw9.onrender.com';
 }
 
 /**
