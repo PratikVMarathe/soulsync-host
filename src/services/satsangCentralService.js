@@ -18,6 +18,7 @@ import {
 } from '../utils/identity';
 
 import { normalizeSocialLinks } from '../constants/socialMedia';
+import { notifyAdminInterestRequest } from './interestNotificationService';
 
 const SATSANG_COLLECTION = 'satsangCentral';
 const INTEREST_REQUESTS_COLLECTION = 'interestRequests';
@@ -233,6 +234,25 @@ export async function submitInterestRequest({
         });
       });
 
+      // Dispatch admin notification email via backend
+      await notifyAdminInterestRequest({
+        requestId: interestRequestRef.id,
+        userId: user.uid,
+        satsangCentralId: opportunity.id,
+        opportunityTitle: opportunity.title || 'Bhagavad Gita Class',
+        category: opportunity.category || 'CLASS',
+        name: cleanName,
+        email: cleanEmail,
+        phoneNumber: cleanPhone,
+        age: parsedAge,
+        passion: normalizedPassion,
+        institutionName: cleanInstitutionName,
+        mode: normalizedMode,
+        language: normalizedLanguage,
+        preferredDay: normalizedDay,
+        description: cleanDesc,
+      });
+
       return updatedUser;
     }
   }
@@ -258,5 +278,25 @@ export async function submitInterestRequest({
     updatedAt: now,
   });
 
+  // Dispatch admin notification email via backend
+  await notifyAdminInterestRequest({
+    requestId: interestRequestRef.id,
+    userId: null,
+    satsangCentralId: opportunity.id,
+    opportunityTitle: opportunity.title || 'Bhagavad Gita Class',
+    category: opportunity.category || 'CLASS',
+    name: cleanName,
+    email: cleanEmail,
+    phoneNumber: cleanPhone,
+    age: parsedAge,
+    passion: normalizedPassion,
+    institutionName: cleanInstitutionName,
+    mode: normalizedMode,
+    language: normalizedLanguage,
+    preferredDay: normalizedDay,
+    description: cleanDesc,
+  });
+
   return null;
 }
+

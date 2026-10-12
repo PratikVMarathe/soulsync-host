@@ -13,7 +13,7 @@ export default function QuizCard({ title, description, route }) {
         onClick={() => navigate(route)}
         className="mt-6 bg-[#2F4F4F] text-white py-3 px-4 rounded-xl font-medium hover:bg-[#1f3636] transition-colors text-sm w-full"
       >
-        Start Concept →
+        Start Quiz →
       </button>
     </div>
   );

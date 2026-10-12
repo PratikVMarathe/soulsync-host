@@ -60,6 +60,12 @@ export default defineConfig(({ command, mode }) => {
       headers: authPopupHeaders,
       port: devPort,
       strictPort: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5003',
+          changeOrigin: true,
+        },
+      },
     },
     preview: {
       headers: authPopupHeaders,

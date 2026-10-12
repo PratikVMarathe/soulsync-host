@@ -25,6 +25,8 @@ import {
   resolveAuthSession,
   safeSignOut,
 } from './services/sessionService';
+import GitaInterestModal from './components/GitaInterestModal';
+import { loadActiveSatsangOpportunities } from './services/satsangCentralService';
 import './index.css';
 
 const AdminModule = lazy(() => import('adminApp/AdminModule'));
@@ -34,9 +36,30 @@ function isAdminRole(role) {
   return ADMIN_ROLES.includes(role);
 }
 
-function QuizWrapper({ user }) {
+function QuizWrapper({ onUserChange, user }) {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const [showGitaModal, setShowGitaModal] = useState(false);
+  const [gitaOpportunity, setGitaOpportunity] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    loadActiveSatsangOpportunities().then((data) => {
+      if (!isMounted) return;
+      const classOpps = (data || []).filter((o) => (o.category || '').toUpperCase() === 'CLASS');
+      const gitaOpp = classOpps.find((o) => (o.title || '').toLowerCase().includes('gita'))
+        || classOpps[0]
+        || data[0]
+        || null;
+      setGitaOpportunity(gitaOpp);
+    }).catch((err) => {
+      console.warn('Failed to load Gita class details for quiz completion dialog:', err);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleBack = () => {
     if (window.history.state && window.history.state.idx > 0) {
@@ -50,16 +73,36 @@ function QuizWrapper({ user }) {
     navigate('/satsang-central', { state: { fromQuizJourney: true } });
   };
 
+  const handleExploreGitaClass = () => {
+    setShowGitaModal(true);
+  };
+
+  const handleCloseGitaModal = () => {
+    setShowGitaModal(false);
+  };
+
   return (
-    <QuizWidget
-      isEmbedded
-      onBack={handleBack}
-      onExit={handleBack}
-      onComplete={handleContinueJourney}
-      onReturn={handleContinueJourney}
-      quizId={quizId}
-      user={user}
-    />
+    <>
+      <QuizWidget
+        isEmbedded
+        onBack={handleBack}
+        onExit={handleBack}
+        onComplete={handleContinueJourney}
+        onReturn={handleContinueJourney}
+        onExploreGitaClass={handleExploreGitaClass}
+        quizId={quizId}
+        user={user}
+      />
+      {showGitaModal ? (
+        <GitaInterestModal
+          isOpen={showGitaModal}
+          onClose={handleCloseGitaModal}
+          onUserChange={onUserChange}
+          opportunity={gitaOpportunity}
+          user={user}
+        />
+      ) : null}
+    </>
   );
 }
 
@@ -212,7 +255,7 @@ function UserShell({ onUserChange, user }) {
                     resetKey={location.pathname}
                   >
                     <Suspense fallback={<div className="app-loading-screen">Loading concept...</div>}>
-                      <QuizWrapper user={user} />
+                      <QuizWrapper onUserChange={onUserChange} user={user} />
                     </Suspense>
                   </AppErrorBoundary>
                 )}
